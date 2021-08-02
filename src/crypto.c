@@ -114,7 +114,7 @@ void DGHV_encrypt(__cit* ciphertext, unsigned long plaintext, __pubkey_set* pubk
         index = r = (int)(mpz_get_ui(rnd) % para->tau);
 
         while(r >= 0){
-            
+
             gen_urandomm(pki, rs_pks, u_pks);
             r--;
         }
@@ -123,10 +123,10 @@ void DGHV_encrypt(__cit* ciphertext, unsigned long plaintext, __pubkey_set* pubk
         mpz_add(pk, pk, pki);
     }
 
-    mpz_mul_ui(pk, pk, 2);
+    mpz_mul_ui(pk, pk, 256);
     mpz_mod(pk, pk, pubkey->x0);
     gen_urandomm(rnd, rs_rnd, u_rnd);
-    mpz_mul_ui(rnd, rnd, 2);
+    mpz_mul_ui(rnd, rnd, 256);
     mpz_add_ui(rnd, rnd, plaintext);
     mpz_add(ciphertext->c, rnd, pk);
 
@@ -141,7 +141,7 @@ void DGHV_encrypt(__cit* ciphertext, unsigned long plaintext, __pubkey_set* pubk
       mpz_t plaintext;
       mpz_init(plaintext);
       mpz_mod(plaintext,ciphertext->c,prikey->sk);
-      mpz_mod_ui(plaintext,plaintext,2);
+      mpz_mod_ui(plaintext,plaintext,256);
       unsigned long pl = mpz_get_ui(plaintext);
       mpz_clear(plaintext);
       return pl;

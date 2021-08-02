@@ -7,7 +7,7 @@ LIBS    := -lstdc++ -lgmp -lm
 LDFLAGS :=
 DEFINES :=
 INCLUDE := -I.
-CFLAGS  := -g -Wall -O3 $(DEFINES) $(INCLUDE)
+CFLAGS  := -Wall -O3 $(DEFINES) $(INCLUDE)
 CXXFLAGS:= $(CFLAGS) -DHAVE_CONFIG_H
 
 SOURCE  := $(wildcard *.c) $(wildcard *.cpp)
