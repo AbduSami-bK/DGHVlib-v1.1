@@ -27,7 +27,7 @@ int main(){
     sec_setting para;
     privatekey prikey;
     publickey  pubkey;
-    ciphertext c1, c2, c3, new;
+    ciphertext c1, c2, c3, newer;
 
     init_sec_para(&para);
     set_default_para(para, TOY);
@@ -38,7 +38,7 @@ int main(){
     init_cit(&c1, para->Theta);
     init_cit(&c2, para->Theta);
     init_cit(&c3, para->Theta);
-    init_cit(&new, para->Theta);
+    init_cit(&newer, para->Theta);
 
 
     unsigned long seed = get_seed();
@@ -218,10 +218,10 @@ int main(){
     evaluate_add(c3, c1, c2, pubkey1->pks[0]);
     expend_cit(c3, pubkey1);
 
-    bootstrap(new, c3, pubkey1, para1, rs);
+    bootstrap(newer, c3, pubkey1, para1, rs);
 
 
-    res = DGHV_decrypt(new, prikey1);
+    res = DGHV_decrypt(newer, prikey1);
 
     if(res == 1) printf("密文刷新成功\n");
     else printf("密文刷新失败\n");

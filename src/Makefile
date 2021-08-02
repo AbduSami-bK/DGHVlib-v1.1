@@ -1,9 +1,9 @@
 
-TARGET  := dghvlib.a
-CC      := gcc
+TARGET  := libdghv.a
+CC      := g++
 AR      = ar
 RANLIB  = ranlib
-LIBS    := -lgmp -lm
+LIBS    := -lstdc++ -lgmp -lm
 LDFLAGS :=
 DEFINES :=
 INCLUDE := -I.

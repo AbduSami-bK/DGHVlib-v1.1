@@ -9,7 +9,7 @@ int main(){
     c_parameters para;
     sc_prikey prikey;
     sc_pubkeys pubkey;
-    c_cit c1, c2, c3, new;
+    c_cit c1, c2, c3, newer;
 
     init_sec_para(&para);
     set_default_para(para, TOY);
@@ -22,7 +22,7 @@ int main(){
     init_cit(&c1, para->Theta);
     init_cit(&c2, para->Theta);
     init_cit(&c3, para->Theta);
-    init_cit(&new, para->Theta);
+    init_cit(&newer, para->Theta);
 
 
     unsigned long seed = get_seed();
@@ -56,9 +56,9 @@ int main(){
 
     expend_sc_cit(c3, pubkey);
 
-    sc_bootstrap(new, c3, pubkey, para, rs);
+    sc_bootstrap(newer, c3, pubkey, para, rs);
 
-    unsigned long ret = CMNT_decrypt(new, prikey);
+    unsigned long ret = CMNT_decrypt(newer, prikey);
 
     if(ret == 0){
         printf("密文刷新成功\n");

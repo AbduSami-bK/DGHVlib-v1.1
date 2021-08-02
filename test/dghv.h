@@ -367,7 +367,7 @@ void gen_switch_key(__rc_prikey* prikey, __rc_pubkey_set* pubkey, __sec_setting*
 
 void BitDecomp(unsigned long** c_expand, mpz_t* z, unsigned long length, unsigned long k);
 
-void mod_switch(__cit* new, __cit* old, __rc_pubkey_set* pubkey, __sec_setting* para);
+void mod_switch(__cit* newer, __cit* old, __rc_pubkey_set* pubkey, __sec_setting* para);
 
 
 /****************  Base64 Encode & Decode.  ****************/

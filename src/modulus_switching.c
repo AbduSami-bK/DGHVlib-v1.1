@@ -40,7 +40,7 @@
     free(binary_str);
  }
 
- void mod_switch(__cit* new, __cit* old, __rc_pubkey_set* pubkey, __sec_setting* para){
+ void mod_switch(__cit* newer, __cit* old, __rc_pubkey_set* pubkey, __sec_setting* para){
 
      unsigned long i, j;
      mpz_t pro, lsb;
@@ -61,14 +61,14 @@
          for(j = 0; j < para->Theta; j++){
              mpz_mul_ui(pro, pubkey->sigma[i][j], c_expand[j][i]);
              mpz_mul_ui(pro,pro,2);
-             mpz_set_ui(new->c, 0);
-             mpz_add(new->c, new->c, pro);
+             mpz_set_ui(newer->c, 0);
+             mpz_add(newer->c, newer->c, pro);
          }
      }
 
-     mpz_mod(new->c, new->c, pubkey->rx0);
+     mpz_mod(newer->c, newer->c, pubkey->rx0);
      mpz_mod_ui(lsb, old->c, 2);
-     mpz_add(new->c, new->c, lsb);
+     mpz_add(newer->c, newer->c, lsb);
 
      mpz_clear(lsb);
      mpz_clear(pro);
