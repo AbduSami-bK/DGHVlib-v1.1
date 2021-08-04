@@ -1,61 +1,204 @@
 # DGHVlib-v1.1
 This repository is about the implementation of homomorphic encryption scheme (DGHV/DGHVlib-v1.1.a).
+(translated with [bing.com](www.bing.com "Bing"))
 
-用gmp大数运算库和gcc编译工具独立完成了整数上同态加密库DGHVlib，功能包括密钥对生成，加密，解密，同态加法运算，同态乘法运算，压缩解密电路，密文刷新，二次偏移公钥压缩算法，随机偏移公钥压缩算法，秘钥转换和模转换算法。
+Using gmp large number operation library and gcc compilation tool independently completed the integer on the homomorphic encryption library DGHVlib, functions include key pair generation, encryption, decryption, homomorphic addition operation, homomorphic multiplication operation, compression decryption circuit, redaction refresh, secondary offset public key compression algorithm, random offset public key compression algorithm, key conversion and mode conversion algorithm.
 
-该版本相对于https://github.com/limengfei1187/DGHVlib的 DGHVlib增加了二次偏移公钥压缩算法，随机偏移公钥压缩算法，秘钥转换和模转换算法。
+This version adds a secondary offset public key compression algorithm, a random offset public key compression algorithm, a key conversion and an die conversion algorithm to the https://github.com/limengfei1187/DGHVlib's DGHVlib.
 
-可以自己编译，进入src文件夹里打开terminal make 就能够编译成静态链接库DGHVlib.a 该同态加密库是在ubuntu环境下完成的，用到了linux系统日期函数，需要在linux环境下使用。将生成的DGHVlib.a和dghv.h头文件复制到test文件夹中，可以运行测试代码。
+You can compile it yourself, go into the src folder to open the terminal make and be able to compile into a static link library libdghv.a This homographic encryption library is done in the ubuntu environment, using the linux system date function, which needs to be used in the linux environment. You can run test code by copying the resulting libdghv.a and dghv.h header files to the test folder.
 
-#define TOY 0 // 是个参数级别 参见secstg.h 也可以自己设置 自己设置后需要用 //bool para_valid(__sec_setting* para)验证一下,参数是否合理 #define SMALL 1 #define MEDIUM 2 #define LARGE 3
+```c
+#define TOY 0 // is a parameter level. See secstg.h you can also set it yourself and verify that the parameters are reasonable with the
+            //bool para_valid (__sec_setting-para)
+#define SMALL 1
+#define MEDIUM 2
+#define LARGE 3
 
-#define PROB_EXP 50 #define BASE 2 #define PRIHL 7 #define PUBHL 8
+#define PROB_EXP 50
+#define BASE 2
+#define PRIHL 7
+#define PUBHL 8
 
-#define W (GMP_NUMB_BITS/2) #define _LSBMASK 1ul #define _MSBMASK (1ul << (2 * W - 1)) #define _BOT_N_MASK(n) ((_LSBMASK << n) - 1) #define _TOP_N_MASK(n) (_BOT_N_MASK(n) << (2 * W - n))
+#define W (GMP_NUMB_BITS/2)
+#define _LSBMASK 1ul
+#define _MSBMASK (1ul << (2 * W - 1))
+#define _BOT_N_MASK(n) ((_LSBMASK << n) - 1)
+#define _TOP_N_MASK(n) (_BOT_N_MASK(n) << (2 * W - n))
 
-#define R_N_SHIFT(x, n) (x >> n) #define L_N_SHIFT(x, n) (x << n) #define MP_EXP(x) (x->_mp_exp) //获得GMP库中的大浮点数mpf_t 中的_mp_exp 见gmp.h 197行注释 #define MP_SIZE(x) (x->_mp_size) //mpf_t 中limbs的数目， 每个limb 是无符号长整形的指针 存放大数中的64位二进制数 #define MP_PREC(x) (x->_mp_prec) //mpf_t 中的精度 表示 有_mp_prec个limb 表示小数部分。 #define MP_ALLOC(x) (x->_mp_alloc)//mpz_t 大整数中的 limbs 个数 #define LIMB(x, i) (((i)<((x)->_mp_size))?((x)->_mp_d[i]):(0L)) //获得mpf_t 或者mpz_t 的第i个limb #define LSB(x) (x & _LSBMASK) //取最低有效位 #define MSB(x) (x & _MSBMASK) //取最高有效位 #define MSBN(x, n) (x & (_TOP_N_MASK(n))) //最高N位有效位， 需要再次右移 2W-N 位才能正确取到 #define LSBN(x, n) (x & (_BOT_N_MASK(n))) //最低N位有效位 #define MIN_ETA(x) (21 * x + 50) // 当参数 中n=5 时的最小秘钥长度。
+#define R_N_SHIFT(x, n) (x >> n)
+#define L_N_SHIFT(x, n) (x << n)
+#define MP_EXP(x) (x->_mp_exp) //Get the _mp_exp in the big floating points in the GMP library mpf_t see the gmp.h 197 line comment
+#define MP_SIZE(x) (x->_mp_size) //mpf_t the number of limbs in , each limb is an unsigned long shaped pointer that holds 64 decimal places in a large number
+#define MP_PREC(x) (x->_mp_prec) //mpf_t Precision in indicates that there are _mp_prec limbs representing fractional parts.
+#define MP_ALLOC(x) (x->_mp_alloc) //mpz_t The number of limbs in a large integer
+#define LIMB(x, i) (((i)<((x)->_mp_size))?((x)->_mp_d[i]):(0L)) //Get the ith limb of the mpf_t or mpz_t
+#define LSB(x) (x & _LSBMASK) //take the lowest significant bit
+#define MSB(x) (x & _MSBMASK) //take the most significant bit
+#define MSBN(x, n) (x & (_TOP_N_MASK(n))) //The highest N-bit valid bit needs to be moved 2W-N bits to the right again in order to get it correctly
+#define LSBN(x, n) (x & (_BOT_N_MASK(n))) //The lowest N-bit significant bit
+#define MIN_ETA(x) (21 * x + 50) // The minimum key length when n=5 in the argument.
 
-// 参数类型 typedef struct securitySetting{ size_t lam; //安全参数 size_t Rho; //公钥中噪音 size_t rho; //加密噪音 size_t eta; //秘钥长度 size_t gam; //公钥长度 size_t Theta; // 稀疏子集的位数 size_t theta; // 稀疏子集的汉明权重 size_t tau; //公钥个数 size_t prec; // yi小数点后的精度 size_t n; //bootstrapping中取小数点后n位， 即c*yi 取小数点后n位参与密文刷新。
-
+// The parameter type
+typedef struct securitySetting {
+    size_t lam; //Security parameters
+    size_t Rho; //Noise in the public key
+    size_t rho; //Encrypted noise
+    size_t eta; //The length of the key
+    size_t gam; //The length of the public key
+    size_t Theta; // The number of bits of the sparse subset
+    size_t theta; // The Hamming weight of the sparse subset
+    size_t tau; //The number of public keys
+    size_t prec; // the accuracy after the decimal point of yi
+    size_t n; //bootstrapping takes the n-bit after the decimal point, i.e. the c*yi takes the decimal point after the n-bit participates in the redaction refresh.
 }__sec_setting;
 
-//私钥类型 typedef struct privatekey{ mpz_t sk; // 私钥 mpz_t* sk_rsub; // 稀疏子集 size_t rsub_size; // 稀疏子集大小 size_t rsub_hw; //稀疏子集汉明权重 size_t sk_bit_cnt;//私钥比特长度 char gen_time[20];// 死要产生时间 }__prikey;
+//The type of private key
+typedef struct privatekey {
+    mpz_t sk; // Private
+    mpz_t* sk_rsub; // Sparse subset
+    size_t rsub_size; // Sparse subset size
+    size_t rsub_hw; //Sparse subset Hamming weights
+    size_t sk_bit_cnt;//Private key bit length
+    char gen_time[20];// Death produces time
+}__prikey;
 
-typedef struct publickeyset{ mpz_t x0; //最长公钥 模x0，控制密文长度 mpz_t *pks; // 公钥集合 mpz_t *cs; // 加密后的稀疏子集 mpf_t *y; // 1/p = y1+y2+... size_t pks_size; // 工要个数 size_t y_size; //yi 个数 size_t pk_bit_cnt; // 公钥比特长度 char gen_time[20]; // 产生时间 }__pubkey_set;
+typedef struct publickeyset {
+    mpz_t x0; //The longest public key mode x0 controls the length of the redaction
+    mpz_t *pks; // The collection of public keys
+    mpz_t *cs; // A sparse subset after encryption
+    mpf_t *y; // 1/p = y1+y2+...
+    size_t pks_size; // The number of jobs
+    size_t y_size; //the number of yi
+    size_t pk_bit_cnt; // The length of the public key bit
+    char gen_time[20]; // The time to produce
+}__pubkey_set;
 
-//密文类型 typedef struct ciphertext{ mpz_t c; // 密文 mpf_t z; //扩展后的密文 zi= cyi size_t z_size; // zi的个数 }__cit; //ciphertext
+//The type of redaction
+typedef struct ciphertext {
+    mpz_t c; // ciphertext
+    mpf_t z; //Extended redaction zi=cyi
+    size_t z_size; // zi's number
+}__cit; //ciphertext
 
-//汉明权重计算表
+//Hamming Weight Calculation Table
+typedef struct hamming_weight_table {
+    mpz_t **table;
+    size_t x;
+    size_t y;
+}__hw_table;
 
-typedef struct hamming_weight_table{ mpz_t **table; size_t x; size_t y; }__hw_table;
+//The secret updates the calculation table
+typedef struct evaluation_table {
+    mpz_t **table;
+    size_t x;
+    size_t y;
+}__ev_table;
 
-//秘闻刷新计算表 typedef struct evaluation_table{ mpz_t **table; size_t x; size_t y; }__ev_table;
+typedef gmp_randstate_t randstate; // Random state
+typedef __prikey* c_prikey; // The type of key pointer
+typedef __pubkey_set* c_pubkeys; // The type of public key pointer
+typedef __sec_setting* c_parameters; // The type of argument pointer
+typedef __cit* c_cit; //The type of redacted pointer
 
-typedef gmp_randstate_t randstate; // 随机状态 typedef __prikey* c_prikey; // 秘钥指针类型 typedef __pubkey_set* c_pubkeys; // 公钥指针类型 typedef __sec_setting* c_parameters; // 参数指针类型 typedef __cit* c_cit; //密文指针类型
+/**************** Security Parameters Setting. ****************/
+//secstg.c
 
-/**************** Security Parameters Setting. ****************/ //secstg.c
+//Initialize the parameters
+void init_sec_para(__sec_setting** para);
 
-//初始化参数 void init_sec_para(__sec_setting** para); //初始化默认参数 TOY, SMALL, MEDIUM, LARGE四个级别 可以自己设置 具体参数在secstg.c文件中 void set_default_para(__sec_setting* para, int level); //验证参数设置是否合理 bool para_valid(__sec_setting* para);
+//Initialize the default parameters TOY, SMALL, MEDIUM, LARGE four levels you can set yourself specific parameters in the secstg.c
+void set_default_para(__sec_setting* para, int level);
 
-/**************** Initialized Key. ****************/ //key.c
+//Verify that the parameter settings are reasonable
+bool para_valid(__sec_setting* para);
 
-//初始化私钥， 需要用到参数初始化，因此在初始化私钥之前必须初始化参数，并且吧参数设置好 void init_sk(__prikey** prikey, __sec_setting* para); //初始化公钥集合 void init_pkset(__pubkey_set** pubkey, __sec_setting* para); //释放私钥 void clear_sk(__prikey* prikey); //释放公钥 void clear_pkset(__pubkey_set* pubkey);
+/**************** Initialized Key. ****************/
+//key.c
 
-/**************** Generated Ramdom Number. ****************/ //gen_random.c
+//Initializing the private key requires parameter initialization, so the parameters must be initialized before the private key can be initialized, and the parameters are set
+void init_sk(__prikey** prikey, __sec_setting* para);
 
-//获得随机种子 unsigned long get_seed(); //讲随机种子与随机状态结合，为产生随机数 做准备 //随机状态类型 randstate，seed随机种子 void set_randstate(randstate rs, unsigned long seed); //产生不超过n bit位的随机数 //rn：mpz_t类型的随机数， rs 随机状态， n 随机数长度 void gen_rrandomb(mpz_t rn, randstate rs, unsigned long n); //产生不超过大整数ub的随机数 void gen_urandomm(mpz_t rn, randstate rs, mpz_t ub);
+//Initialize the collection of public keys
+void init_pkset(__pubkey_set** pubkey, __sec_setting* para);
 
-/**************** Generated Private Key & Public Key. ******/ //gen_key.c //产生素数 素数p，n 随机数长度， rs 随机状态 void gen_prime(mpz_t p, size_t n, randstate rs); //大整数 n/d 取商q的四舍五入值 void div_round_q(mpz_t q, mpz_t n, mpz_t d); //判断b是否是 a rough, a-rough： b的最小素因子不超过a bool is_a_rough(mpz_t a, mpz_t b); // 产生公钥中的Q集合 p是秘钥， mpz_t q是得到的Q集合 void getQs(mpz_t q, mpz_t p, size_t gam, size_t tau, size_t lam, randstate rs); //随机产生稀疏子集 ss是稀疏子集 ss_hw稀疏子集的汉明权重 ss_size稀疏子集的大小 void randomize_ss(mpz_t ss, size_t ss_hw, size_t ss_size); //随机产生 ss_hw个 yy 使得 ∑yyi = 「(2^prec)/p」(此处「 」取近似整数) 为产生1/p=∑yi做准备 void randomize_sk(mpz_t yy, mpz_t p, size_t ss_hw, size_t prec); //把秘钥 p 转换成 1/p=∑yi 存放在公钥pubkey中 void expand_p2y(__pubkey_set pubkey, __prikey prikey, size_t prec, randstate rs); // 产生 私钥prikey void gen_prikey(__prikey prikey, randstate rs); //产生公钥pubkey，产生公钥过程中需要用到私钥prikey，参数para 随机状态rs model表示是否对秘钥中的稀疏子集加密 放到公钥中 1表示是 0 表示否 void gen_pubkey(__pubkey_set pubkey, __prikey prikey, __sec_setting para, randstate rs, int model);
+//Release the private key
+void clear_sk(__prikey* prikey);
 
-/**************** Initialized Ciphertext. ****************/ //ciphertext.c
+//Release the public key
+void clear_pkset(__pubkey_set* pubkey);
 
-//初始化密文 Theta是参数中的Theta void init_cit(__cit** ciph, size_t Theta); //扩展密文 zi = cyi存放在密文ciph->z[i]中， pubkey位公钥集合 void expend_cit(__cit ciph, __pubkey_set* pubkey); //释放密文 void clear_cit(__cit* ciph);
+/**************** Generated Random Number. ****************/
+//gen_random.c
 
-/**************** Encrypt & Decrypt. ****************/ //crypto.c
+//Get random seeds
+unsigned long get_seed();
 
-//DGHV 加密 ciphertext加密后的密文， plaintext：明文 表示0,1位（同态加密按照位加密）pubkey：公钥 para：参数 rs：随机状态 void DGHV_encrypt(__cit* ciphertext, unsigned long plaintext, __pubkey_set* pubkey, __sec_setting* para, randstate rs); //解密 ciphertext：解密的密文， prikey私钥 unsigned long DGHV_decrypt(__cit* ciphertext, __prikey* prikey);
+//Talk about random seeds combining with random states to prepare for the generation of random numbers
+//Random state type randstate, seed random seed
+void set_randstate(randstate rs, unsigned long seed);
 
-/**************** Squashed Decrypt Circuitry. **************/ //squa_dec.c 这部分用不到就不说了， 这部分是压缩解密电路所用的数据结构和函数 void init_hw_table(__hw_table hwtable, size_t x, size_t y);
+//Produces random numbers that do not exceed n bit bits
+//rn：mpz_t type of random number, rs random state, n random number length
+void gen_rrandomb(mpz_t rn, randstate rs, unsigned long n);
+
+//Produces a random number that does not exceed the large integer ub
+void gen_urandomm(mpz_t rn, randstate rs, mpz_t ub);
+
+/**************** Generated Private Key & Public Key. ******/
+//gen_key.c
+
+//Produces prime prime number p, n random number length, rs random state
+void gen_prime(mpz_t p, size_t n, randstate rs);
+
+//Rounding value of the large integer n/d picker q
+void div_round_q(mpz_t q, mpz_t n, mpz_t d);
+
+//Determine whether b is a rough, a-rough: b with a minimum prime factor of no more than a
+bool is_a_rough(mpz_t a, mpz_t b);
+
+// The Q collection p in the resulting public key is the key, mpz_t q is the obtained Q collection
+void getQs(mpz_t q, mpz_t p, size_t gam, size_t tau, size_t lam, randstate rs);
+
+//Randomly producing ss ss is a sparse subset ss_hw the size of a sparse subset ss_size sparse subset
+void randomize_ss(mpz_t ss, size_t ss_hw, size_t ss_size);
+
+//Randomly producing ss_hw yy makes ∑yyi = 「(2^prec)/p」 (here「 」 approximate integer) prepare for the generation of 1/p=∑yi
+void randomize_sk(mpz_t yy, mpz_t p, size_t ss_hw, size_t prec);
+
+//Convert the key p to 1/p=∑yi in the public key pubkey
+void expand_p2y(__pubkey_set pubkey, __prikey prikey, size_t prec, randstate rs);
+
+// Produces a private key primary
+void gen_prikey(__prikey prikey, randstate rs);
+
+//To generate a public key pubkey, the private key prikey is required in the process of generating the public key, and the parameter para random state rs model indicates whether to encrypt the sparse subset in the key Placed in the public key 1 means 0 means no
+void gen_pubkey(__pubkey_set pubkey, __prikey prikey, __sec_setting para, randstate rs, int model);
+
+/**************** Initialized Ciphertext. ****************/
+//ciphertext.c
+
+//Initializing the redaction Theta is the Theta in the parameter
+void init_cit(__cit** ciph, size_t Theta);
+
+//Extended redaction zi = cyi is stored in the redaction ciph->z,i, a collection of pubkey bit public keys
+void expend_cit(__cit ciph, __pubkey_set* pubkey);
+
+//Release the redaction
+void clear_cit(__cit* ciph);
+
+/**************** Encrypt & Decrypt. ****************/
+//crypto.c
+
+//DGHV encryption ciphertext encrypted redaction, plaintext: clear text for 0,1 bit (homographic encryption encrypted in bits) pubkey: public key para:parameter rs: random state
+void DGHV_encrypt(__cit* ciphertext, unsigned long plaintext, __pubkey_set* pubkey, __sec_setting* para, randstate rs);
+
+//Decrypt ciphertext: Decrypted redaction, prikey private key
+unsigned long DGHV_decrypt(__cit* ciphertext, __prikey* prikey);
+
+/**************** Squashed Decrypt Circuitry. **************/
+//squa_dec.c This part is not used to say, this part is the compression decryption circuit used data structure and functions
+void init_hw_table(__hw_table hwtable, size_t x, size_t y);
 
 void init_ev_table(__ev_table** evtable, size_t x, size_t y);
 
@@ -71,10 +214,36 @@ unsigned long get_ciph_lsb(__cit* ciph);
 
 unsigned long get_ciphdivp_lsb(__cit* ciph, __prikey* prikey, __sec_setting* para);
 
-/**************** Evaluated Addition & Multiplication. ****************/ //eval_oper.c
+/**************** Evaluated Addition & Multiplication. ****************/
+//eval_oper.c
 
-//同态加法， 并把相加得到的结果密文sum 进行扩展 zi = cyi（如果不对这个密文刷新就不需要扩展，因此下面提供了不带扩展功能的同台加法操作） void evaluate_add_ex(__cit sum, __cit* c1, __cit* c2, __pubkey_set* pubkey); //不带密文扩展的同态加密法操作 void evaluate_add(__cit* sum, __cit* c1, __cit* c2, mpz_t x0); //带扩展的同台乘法操作 void evaluate_mul_ex(__cit* product, __cit* c1, __cit* c2, __pubkey_set* pubkey); //不带扩展的同台乘法操作 void evaluate_mul(__cit* product, __cit* c1, __cit* c2, mpz_t x0);
+//Homomorphic addition, and the resulting redaction sum that is added together is extended zi = cyi (no expansion is required if this redaction is not refreshed, so the same addition operation without extension is provided below)
+void evaluate_add_ex(__cit sum, __cit* c1, __cit* c2, __pubkey_set* pubkey);
 
-/**************** Bootstrapping. ****************/ //bootstrapping.c
+//Same-state encryption operations without redaction extensions
+void evaluate_add(__cit* sum, __cit* c1, __cit* c2, mpz_t x0);
 
-//计算第i列的汉明权重，就是那个进位（这里的进位都是用密文表示的） void c_get_hw(int i, __ev_table* ev_table, __sec_setting* para, mpz_t x0); //取密文ciph最低有效位，对最低有效位加密 得到的密文存储在cc中 void c_get_ciph_lsb(__cit* cc, __cit* ciph, __pubkey_set* pubkey, __sec_setting* para, randstate rs); //取c/p = 「c∑siyi」+（误差不写了打不出来，哈哈哈）的最低有效位，就是计算出来 小数点前一位和后一位的密文 在求和 就是他的最低有效位的密文 //ciph需要计算的密文 cc计算的最低有效位的密文 void c_get_ciphdivp_lsb(__cit* cc, __cit* ciph, __pubkey_set* pubkey, __sec_setting* para); // 密文刷新 cc刷新的密文， ciph被刷新的密文 void bootstrap(__cit* cc, __cit* ciph, __pubkey_set* pubkey, __sec_setting* para, randstate rs);
+//Same-stage multiplication operation with extension
+void evaluate_mul_ex(__cit* product, __cit* c1, __cit* c2, __pubkey_set* pubkey);
+
+//Same-stage multiplication without extension
+void evaluate_mul(__cit* product, __cit* c1, __cit* c2, mpz_t x0);
+
+/**************** Bootstrapping. ****************/
+//bootstrapping.c
+
+//The Hamming weight in column i is calculated, which is the entry (the entry here is expressed in redaction)
+void c_get_hw(int i, __ev_table* ev_table, __sec_setting* para, mpz_t x0);
+
+//Take the redaction ciph minimum valid bit, encrypt the minimum valid bit obtained redaction is stored in cc
+void c_get_ciph_lsb(__cit* cc, __cit* ciph, __pubkey_set* pubkey, __sec_setting* para, randstate rs);
+
+//Take c/p = 「c∑siyi」+（error does not write out, hahaha) the lowest effective bit, is calculated out the decimal point before and the last digit of the redaction in summation is his lowest significant bit of redaction
+//ciph The redaction that needs to be calculated
+//cc The redaction of the lowest significant bit calculated
+void c_get_ciphdivp_lsb(__cit* cc, __cit* ciph, __pubkey_set* pubkey, __sec_setting* para);
+
+// Redaction refresh cc Refreshed redactions， ciph The redaction that was refreshed
+void bootstrap(__cit* cc, __cit* ciph, __pubkey_set* pubkey, __sec_setting* para, randstate rs);
+
+```
