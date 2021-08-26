@@ -11,14 +11,20 @@
  */
 #include "dghv.h"
 
-void evaluate_add(__cit* sum, __cit* c1, __cit* c2, mpz_t x0){
-
+void evaluate_add(__cit* sum, __cit* c1, __cit* c2, mpz_t x0)
+{
     mpz_add(sum->c, c1->c, c2->c);
-	mpz_mod(sum->c,sum->c,x0);
+	mpz_mod(sum->c, sum->c, x0);
 }
 
-void evaluate_mul(__cit* product, __cit* c1, __cit* c2, mpz_t x0){
+void evaluate_sub(__cit* diff, __cit* c1, __cit* c2, mpz_t x0)
+{
+    mpz_sub(diff->c, c1->c, c2->c);
+	mpz_mod(diff->c, diff->c, x0);
+}
 
+void evaluate_mul(__cit* product, __cit* c1, __cit* c2, mpz_t x0)
+{
 	mpz_mul(product->c, c1->c, c2->c);
 	mpz_mod(product->c, product->c, x0);
 }

@@ -1,7 +1,7 @@
 CC		:= g++
 LIBS	:= -std=c++14 -L../src -ldghv -lgmp -lm
 INCLUDE	:= -I.
-CFLAGS	:= -g -Wall -O3 $(INCLUDE)
+CFLAGS	:= -g -Wall -DDEBUG -O0 $(INCLUDE)
 CXXFLAGS:= $(CFLAGS) -DHAVE_CONFIG_H
 OBJECTS	:= CMNT.o CNT.o DGHV.o
 

@@ -7,7 +7,9 @@ LIBS    := -lstdc++ -lgmp -lm
 LDFLAGS :=
 DEFINES :=
 INCLUDE := -I.
-CFLAGS  := -Wall -O3 $(DEFINES) $(INCLUDE)
+DEBUGFLAGS	:= -g -DDEBUG -O0
+RELEASEFLAGS:= -O3
+CFLAGS  := -Wall $(DEBUGFLAGS) $(DEFINES) $(INCLUDE)
 CXXFLAGS:= $(CFLAGS) -DHAVE_CONFIG_H
 
 SOURCE  := $(wildcard *.c) $(wildcard *.cpp)

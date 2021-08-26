@@ -13,13 +13,14 @@
 #ifndef _DGHV_H_
 #define _DGHV_H_
 
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include <time.h>
 #include <sys/time.h>
-#include <string.h>
+#include <string>
 #include <math.h>
 #include <gmp.h>
 
@@ -334,10 +335,24 @@ void swap_cit(__cit* ciph1, __cit* ciph2);
 /****************  Encrypt & Decrypt.  ****************/
 //crypto.c
 
-//DGHV encryption ciphertext encrypted redaction, plaintext: clear text for 0,1 bit (homographic encryption encrypted in bits) pubkey: public key para:parameter rs: random state
+/**
+ * @brief DGHV encryption
+ *
+ * @param ciphertext encrypted redaction
+ * @param plaintext clear text for 0,1 bit (homographic encryption encrypted in bits)
+ * @param pubkey public key
+ * @param para parameter
+ * @param rs random state
+ */
 void DGHV_encrypt(__cit* ciphertext, unsigned long plaintext, __pubkey_set* pubkey, __sec_setting* para, randstate rs);
 
-//Decrypt ciphertext: Decrypted redaction, prikey private key
+/**
+ * @brief Decrypt
+ *
+ * @param ciphertext Decrypted redaction
+ * @param prikey private key
+ * @return unsigned long 
+ */
 unsigned long DGHV_decrypt(__cit* ciphertext, __prikey* prikey);
 
 void CMNT_encrypt(__cit* ciphertext, unsigned long plaintext, __sc_pubkey_set* pubkey, __sec_setting* para, randstate rs);
@@ -375,17 +390,18 @@ unsigned long get_sc_ciphdivp_lsb(__cit* ciph, __sc_prikey* prikey, __sec_settin
 //eval_oper.c
 
 //Homomorphic addition, and the resulting redaction sum that is added together is extended zi = cyi (no expansion is required if this redaction is not refreshed, so the same addition operation without extension is provided below)
-void evaluate_add_ex(__cit sum, __cit* c1, __cit* c2, __pubkey_set* pubkey);
+// void evaluate_add_ex(__cit sum, __cit* c1, __cit* c2, __pubkey_set* pubkey);
 
 //Same-state encryption operations without redaction extensions
 void evaluate_add(__cit* sum, __cit* c1, __cit* c2, mpz_t x0);
 
 //Same-stage multiplication operation with extension
-void evaluate_mul_ex(__cit* product, __cit* c1, __cit* c2, __pubkey_set* pubkey);
+// void evaluate_mul_ex(__cit* product, __cit* c1, __cit* c2, __pubkey_set* pubkey);
 
 //Same-stage multiplication without extension
 void evaluate_mul(__cit* product, __cit* c1, __cit* c2, mpz_t x0);
 
+void evaluate_sub(__cit* diff, __cit* c1, __cit* c2, mpz_t x0);
 
 /****************  Bootstrapping.  ****************/
 //bootstrapping.c
@@ -462,7 +478,13 @@ int save_prikey(__prikey* prikey, const char* prikey_filename);
 
 int save_pubkey(__pubkey_set* pubkey, const char* pubkey_filename);
 
-int save_str(char** buffer, int length, const char* filename);
+int save_str(char** buffer, signed long int length, const char* filename);
+int __save_str(char** buffer, unsigned long int length, FILE* openFile);
+int __save_1_str(char* str1, FILE* out);
+void save_string(std::string* buffer, long length, const char *filename);
+void __save_string(std::string* buffer, unsigned long length, std::ofstream& file);
+void __save_1_string(std::string str1, std::ofstream& out);
+
 
 int read_sec_para(__sec_setting* para, const char* filename);
 
@@ -471,5 +493,12 @@ int read_prikey(__prikey* prikey, const char* prikey_filename);
 int read_pubkey(__pubkey_set* pubkey, const char* pubkey_filename);
 
 char** read_str(const char* filename);
+int malloc_buffer_read_file(char*** buffer, FILE* in);
+unsigned int __read_str(FILE* openFile, char*** buffer);
+char* __read_1_str(FILE* openFile);
+char** read_string(const char* filename);
+unsigned long malloc_buffer_read_file(std::ifstream& in, char ***buffer);
+unsigned long __read_string(std::ifstream& openFile, char ***buffer);
+char* __read_1_string(std::ifstream& openFile);
 
 #endif

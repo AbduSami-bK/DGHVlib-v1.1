@@ -72,19 +72,24 @@ void init_sec_para(__sec_setting** para){
      }
  }
 
- bool para_valid(__sec_setting* para){
-
+ bool para_valid(__sec_setting* para)
+ {
+     bool ret = true;
      if(para->n < 5){
          printf("The parameter of n: %lu must be more than 5.When n = 5, FHE have best performance\n", para->n);
+         ret = false;
      }
      if(para->Rho < para->rho){
          printf("The parameter of Rho: %lu must be more than rho:%lu.\n",para->Rho, para->rho);
+         ret = false;
      }
      if(para->eta < MIN_ETA(para->Rho)){
          printf("The parameter of eta: %lu must be more than 21 * Rho + 50.\n",para->eta);
+         ret = false;
      }
      if(para->Theta < para->theta){
          printf("The parameter of Theta: %lu must be more than theta: %lu",para->Theta, para->theta);
+         ret = false;
      }
-     exit(1);
+     return ret;
  }

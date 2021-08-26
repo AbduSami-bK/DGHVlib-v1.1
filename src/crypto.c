@@ -13,7 +13,7 @@
 #include "dghv.h"
 
 // Maximum unsigned long plaintext + 1. That is, this number is the modulo class for Encryptions and Decryptions
-#define PT_LIMIT    2
+#define PT_LIMIT    256
 
 void DGHV_encrypt(__cit* ciphertext, unsigned long plaintext, __pubkey_set* pubkey, __sec_setting* para, randstate rs) {
  	mpz_t rn;

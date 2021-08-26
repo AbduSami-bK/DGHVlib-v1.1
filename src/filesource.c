@@ -10,224 +10,335 @@
  * limitations under the License. See accompanying LICENSE file.
  */
 
- #include "dghv.h"
- #include <unistd.h>
+#include "dghv.h"
+#include <unistd.h>
+#include <fstream>
+#include <string.h>
 
- static int gen_pubkey_header(__pubkey_set* pubkey, char* header, int lines){
-     int ret = 0;
-     if(pubkey == NULL || header == NULL){
-         return -1;
-     }
-     char *owner, *hostname;
-     hostname = (char*)malloc(256*sizeof(char));
-     owner = getlogin();
-     gethostname(hostname,256);
-     sprintf(header, "subject: test fhe-dghv\nalgorithm: dghv\nsize: %lu\npublic key numbers: %lu\nowner: %s@%s\nTime: %s\nLines: %d",
-             pubkey->pk_bit_cnt, pubkey->pks_size, owner, hostname, pubkey->gen_time, lines);
-     return ret;
- }
+static int gen_pubkey_header(__pubkey_set* pubkey, char* header, int lines) {
+    int ret = 0;
+    if(pubkey == NULL || header == NULL){
+        return -1;
+    }
+    char *owner, *hostname;
+    hostname = (char*)malloc(256*sizeof(char));
+    owner = getlogin();
+    gethostname(hostname,256);
+    sprintf(header, "subject: test fhe-dghv\nalgorithm: dghv\nsize: %lu\npublic key numbers: %lu\nowner: %s@%s\nTime: %s\nLines: %d",
+            pubkey->pk_bit_cnt, pubkey->pks_size, owner, hostname, pubkey->gen_time, lines);
+    return ret;
+}
 
- static int gen_prikey_header(__prikey* prikey, char* header, int lines){
-     int ret = 0;
-     if(prikey == NULL || header == NULL){
-         return -1;
-     }
-     char *owner, *hostname;
-     hostname = (char*)malloc(256*sizeof(char));
-     owner = getlogin();
-     gethostname(hostname,256);
-     sprintf(header, "subject: test fhe-dghv\nalgorithm: dghv\nsize: %lu\nowner: %s@%s\nTime: %s\nLines: %d",
-             prikey->sk_bit_cnt, owner, hostname, prikey->gen_time, lines);
-     return ret;
- }
+static int gen_prikey_header(__prikey* prikey, char* header, int lines) {
+    int ret = 0;
+    if(prikey == NULL || header == NULL){
+        return -1;
+    }
+    char *owner, *hostname;
+    hostname = (char*)malloc(256*sizeof(char));
+    owner = getlogin();
+    gethostname(hostname,256);
+    sprintf(header, "subject: test fhe-dghv\nalgorithm: dghv\nsize: %lu\nowner: %s@%s\nTime: %s\nLines: %d",
+            prikey->sk_bit_cnt, owner, hostname, prikey->gen_time, lines);
+    return ret;
+}
 
- int save_str(char** buffer, int length, const char* filename){
-     int ret = 0;
-     if(buffer == NULL || length <= -1){
-         return -1;
-     }
-     FILE* out;
+int save_str(char** buffer, signed long length, const char* filename) {
+    if (buffer == NULL || length <= -1) {
+        return -1;
+    }
 
-     if((out = fopen(filename,"wt")) == NULL){
-            fprintf(stderr,"Cannot open security parameter file\n");
-     }
-     int i;
-     char* header = (char*)malloc(2*W*sizeof(char));
-     sprintf(header, "Ciphertexts:%d", length);
-     ret = fprintf(out, "%s\n", header);
-     for(i = 0; i < length - 1; i++){
-         ret = fprintf(out, "%lu\n%s\n", strlen(buffer[i]), buffer[i]);
-     }
-     ret = fprintf(out, "%lu\n%s", strlen(buffer[i]), buffer[i]);
+    FILE* out;
+    if ((out = fopen(filename, "wt")) == NULL) {
+        fprintf(stderr, "Cannot open file %s\n", filename);
+        return -1;
+    }
 
-     fclose(out);
-     return ret;
- }
+    int ret = __save_str(buffer, length, out);
 
- char** read_str(const char* filename){
+    fclose(out);
+    return ret;
+}
 
-     if(filename == NULL){
-         return NULL;
-     }
+int __save_str(char** buffer, unsigned long int noOfCStrings, FILE* out) {
+    int ret = fprintf(out, "Ciphertexts:%lu\n", noOfCStrings);
+    //do {
+    for (unsigned long int i = 0; i < noOfCStrings; ++i) {
+        ret += __save_1_str(buffer[i], out);
+        //++i;
+    } //while (i < noOfCStrings);
 
-     FILE* in;
-     if((in = fopen(filename,"r")) == NULL){
-            fprintf(stderr,"Cannot open %s file\n", filename);
-     }
-     int len1, len2, ret, i = 0;
-     char** buffer = NULL;
-     char* header = (char*)malloc(2*W * sizeof(char));
+    return ret;
+}
 
-     while(!feof(in)){
-         if(i == 0){
-             header = fgets(header, 2*W, in);
-             sscanf(header, "Ciphertexts:%d", &len1);
-    	     buffer = (char**)malloc((len1+1) * sizeof(char*));
-             buffer[0]= (char*)malloc(2*W * sizeof(char));
-             sprintf(buffer[0], "%d", len1);
-         }else if(i <= len1) {
-             ret = fscanf(in, "%d", &len2);
-             buffer[i] = (char*)malloc((len2+W) * sizeof(char));
-             ret = fscanf(in, "%s", buffer[i]);
-             printf("%d\n",i);
-         }
-         i++;
-     }
-     return buffer;
- }
+int __save_1_str(char* str1, FILE* out) {
+    return fprintf(out, "%lu\n%s\n", strlen(str1), str1);
+}
 
- int save_sec_para(__sec_setting* para, const char* filename){
+void save_string(std::string* buffer, long length, const char* filename) {
+    if (buffer == NULL || length <= -1) {
+        return;
+    }
 
-     int ret = 0;
-     if(para == NULL || filename == NULL){
-         return -1;
-     }
-     char* buffer = (char*)malloc(W*8 * sizeof(char));
-     sprintf(buffer, "lam:%lu\nrho:%lu\nRho:%lu\neta:%lu\ngam:%lu\nTheta:%lu\ntheta:%lu\nn:%lu\ntau:%lu\nprec:%lu",\
-                      para->lam,para->rho,para->Rho,para->eta,para->gam,\
-                      para->Theta,para->theta,para->n,para->tau,para->prec);
-     FILE *out;
-     if((out = fopen(filename,"wt")) == NULL){
-            fprintf(stderr,"Cannot open security parameter file\n");
-     }
+    std::ofstream out(filename);
+    if (!out.is_open()) {
+        fprintf(stderr, "Cannot open file %s\n", filename);
+        return;
+    }
 
-     ret = fprintf(out, "%s\n", buffer);
-     free(buffer);
-     fclose(out);
-     return ret;
- }
+    __save_string(buffer, length, out);
 
- int read_sec_para(__sec_setting* para, const char* filename){
-     int ret = 0;
-     if(para == NULL || filename == NULL){
-         return -1;
-     }
-     char* buffer = (char*)malloc(W*8 * sizeof(char));
-     memset(buffer, '\0', W*8 * sizeof(char));
-     FILE *in;
-     if((in = fopen(filename,"r")) == NULL){
-            fprintf(stderr,"Cannot open security parameter file\n");
-     }
-     int i = 0;
+    out.close();
+}
 
-     while(!feof(in)){
-         fgets(buffer + i, W*8, in);
-         i = strlen(buffer);
-     }
+void __save_string(std::string* buffer, unsigned long noOfCStrings, std::ofstream& out) {
+    out << "Ciphertexts:" << noOfCStrings << "\n";
+    for (unsigned long i = 0; i < noOfCStrings; ++i) {
+        __save_1_string(buffer[i], out);
+    }
+}
 
-     ret = sscanf(buffer, "lam:%lu\nrho:%lu\nRho:%lu\neta:%lu\ngam:%lu\nTheta:%lu\ntheta:%lu\nn:%lu\ntau:%lu\nprec:%lu",\
-                           &(para->lam),&(para->rho),&(para->Rho),&(para->eta),&(para->gam),\
-                           &(para->Theta),&(para->theta),&(para->n),&(para->tau),&(para->prec));
+void __save_1_string(std::string str1, std::ofstream& out) {
+    out << str1.length() << "\n" << str1 << "\n";
+}
 
-     free(buffer);
-     fclose(in);
-     return ret;
+char** read_str(const char* filename) {
 
- }
+    if (filename == NULL) {
+        return NULL;
+    }
 
- int save_prikey(__prikey* prikey, const char* prikey_filename){
-     int ret = 0;
-     if(prikey == NULL || prikey_filename == NULL){
-         return -1;
-     }
+    FILE* in;
+    if((in = fopen(filename, "r")) == NULL) {
+        fprintf(stderr, "Cannot open %s file\n", filename);
+        return NULL;
+    }
 
-     int length, i;
-     FILE *out;
-     char** buffer = (char**)malloc(W/8 * sizeof(char*));
-     char*  header = (char*)malloc(W*W/2 * sizeof(char));
-     char*  base64 = (char*)malloc((prikey->sk_bit_cnt/2) * sizeof(char));
+    char** buffer = NULL;
+    __read_str(in, &buffer);
 
-     char s1[] = "---- BEGIN FHE PRIVATE KEY ----";
-     char s2[] = "---- END FHE PRIVATE KEY ----";
+    fclose(in);
+    return buffer;
+}
 
-     ret = format_privatekey_str(prikey, buffer, &length);
-     ret = gen_prikey_header(prikey, header, length);
+int malloc_buffer_read_file(char*** buffer, FILE* in) {
+    unsigned long int len1;
+    char* header = (char*) malloc(2*W * sizeof (char));
+    header = fgets(header, 2*W, in);
+    sscanf(header, "Ciphertexts:%lu\n", &len1);
+    *buffer = (char**) malloc((len1+1) * sizeof (char **));
+    //buffer[0]= (char*) malloc(2*W * sizeof (char));
+    //sprintf(buffer[0], "%d", len1);
+    free(header);
+    return len1;
+}
 
-     if((out = fopen(prikey_filename,"wt")) == NULL){
-            fprintf(stderr,"Cannot open privatekey file\n");
-     }
+unsigned int __read_str(FILE* in, char ***buffer) {
+    unsigned int len1;
 
-     fprintf(out, "%s\n", s1);
-     fprintf(out, "%s\n", header);
-     for(i = 0; i < length; i++){
+    if (!feof(in)) {
+        len1 = malloc_buffer_read_file(buffer, in);
+    } else return 0;
 
-         base64_encode(buffer[i], strlen(buffer[i]), base64);
-         fprintf(out, "%s\n", base64);
-     }
-     ret = fprintf(out, "%s\n", s2);
-     free(base64);
-     fclose(out);
-     free(header);
-     for(i = length - 1; i >= 0; i--)free(buffer[i]);
-     return ret;
- }
+    for (unsigned int i = 0; i < len1 && !feof(in); ++i) {
+        (*buffer)[i] = __read_1_str(in);
+    }
+    return len1;
+}
 
- int read_prikey(__prikey* prikey, const char* prikey_filename){
-     int ret = 0;
-     if(prikey == NULL || prikey_filename == NULL){
-         return -1;
-     }
+char* __read_1_str(FILE* in) {
+    int len2;
+    /*ret +=*/ fscanf(in, "%d", &len2);
+    char* str = (char*) malloc((len2+W) * sizeof (char));
+    /*ret +=*/ fscanf(in, "%s", str);
+    return str;
+}
 
-     FILE* in;
-     char tmp[10];
-     int i = 0, j = 0, length;
-     int base64_len  = prikey->sk_bit_cnt/2;
-     int buffer_ilen = prikey->sk_bit_cnt/3;
-     char** buffer = (char**)malloc(W/8 * sizeof(char*));
-     char*  base64 = (char*)malloc(base64_len * sizeof(char));
-     char*  header = (char*)malloc(W*8 * sizeof(char));
+char** read_string(const char* filename) {
+    if (filename == NULL) {
+        return NULL;
+    }
 
-     if((in = fopen(prikey_filename,"r"))== NULL){
-            fprintf(stderr,"Cannot open privatekey file\n");
-     }
+    std::ifstream in(filename);
+    if(!in.is_open()) {
+        fprintf(stderr, "Cannot open %s file\n", filename);
+        return NULL;
+    }
 
-     while(!feof(in)){
-         if(i < PRIHL){
-             header = fgets(header, W*8, in);
-             strncpy(tmp, header, 5);
-             if(strcmp(tmp, "Lines") == 0){
-                 strcpy(tmp, header + 7);
-                 sscanf(tmp, "%d\n", &length);
-             }
-             i++;
-         }else{
-             if(j == length) break;
-             ret = fscanf(in, "%s\n", base64);
-             buffer[j] = (char*)malloc(buffer_ilen * sizeof(char));
-             memset(buffer[j], '\0', buffer_ilen * sizeof(char));
-             base64_decode(base64, strlen(base64), buffer[j]);
-             j++;
-         }
-     }
-     format_str_privatekey(buffer, length, prikey);
+    char **buffer = NULL;
+    __read_string(in, &buffer);
 
-     free(header);
-     free(base64);
-     for(i = length - 1; i >= 0; i--) free(buffer[i]);
-     free(buffer);
-     fclose(in);
-     return ret;
- }
+    in.close();
+    return buffer;
+}
+
+unsigned long __read_string(std::ifstream& in, char ***buffer) {
+    unsigned long len1;
+
+    if (!in.eof()) {
+        len1 = malloc_buffer_read_file(in, buffer);
+    } else return 0;
+
+    for (unsigned long i = 0; i < len1 && !in.eof(); ++i) {
+        (*buffer)[i] = __read_1_string(in);
+    }
+    return len1;
+}
+
+unsigned long malloc_buffer_read_file(std::ifstream& in, char ***buffer) {
+    unsigned long len1 = 0;
+    std::string header;
+    in >> header;
+    int r = sscanf(header.c_str(), "Ciphertexts:%lu\n", &len1);
+    if (r != 1) {
+        // header.clear();
+        return 0;
+    }
+    *buffer = (char**) malloc((len1+1) * sizeof (char **));
+    header.clear();
+    return len1;
+}
+
+char* __read_1_string(std::ifstream& in) {
+    int len2;
+    in >> len2;
+    char* str = (char*) malloc((len2+W) * sizeof (char));
+    in >> str;
+    return str;
+}
+
+int save_sec_para(__sec_setting* para, const char* filename) {
+
+    int ret = 0;
+    if(para == NULL || filename == NULL){
+        return -1;
+    }
+    char* buffer = (char*)malloc(W*8 * sizeof (char));
+    sprintf(buffer, "lam:%lu\nrho:%lu\nRho:%lu\neta:%lu\ngam:%lu\nTheta:%lu\ntheta:%lu\nn:%lu\ntau:%lu\nprec:%lu",
+                    para->lam, para->rho, para->Rho, para->eta, para->gam,
+                    para->Theta, para->theta, para->n, para->tau, para->prec);
+    FILE *out;
+    if ((out = fopen(filename,"wt")) == NULL) {
+        fprintf(stderr, "Cannot open security parameter file\n");
+    }
+
+    ret = fprintf(out, "%s\n", buffer);
+    free(buffer);
+    fclose(out);
+    return ret;
+}
+
+int read_sec_para(__sec_setting* para, const char* filename) {
+    int ret = 0;
+    if (para == NULL || filename == NULL) {
+        return -1;
+    }
+    char* buffer = (char*) malloc(W*8 * sizeof (char));
+    memset(buffer, '\0', W*8 * sizeof (char));
+    FILE *in;
+    if ((in = fopen(filename,"r")) == NULL) {
+        fprintf(stderr,"Cannot open security parameter file\n");
+    }
+    int i = 0;
+
+    while (!feof(in)) {
+        fgets(buffer + i, W*8, in);
+        i = strlen(buffer);
+    }
+
+    ret = sscanf(buffer, "lam:%lu\nrho:%lu\nRho:%lu\neta:%lu\ngam:%lu\nTheta:%lu\ntheta:%lu\nn:%lu\ntau:%lu\nprec:%lu",
+                        &(para->lam), &(para->rho), &(para->Rho), &(para->eta), &(para->gam),
+                        &(para->Theta), &(para->theta), &(para->n), &(para->tau), &(para->prec));
+
+    free(buffer);
+    fclose(in);
+    return ret;
+
+}
+
+int save_prikey(__prikey* prikey, const char* prikey_filename) {
+    int ret = 0;
+    if (prikey == NULL || prikey_filename == NULL) {
+        return -1;
+    }
+
+    int length, i;
+    FILE *out;
+    char** buffer = (char**) malloc(W/8 * sizeof (char*));
+    char*  header = (char*) malloc(W*W/2 * sizeof (char));
+    char*  base64 = (char*) malloc((prikey->sk_bit_cnt/2) * sizeof (char));
+
+    char s1[] = "---- BEGIN FHE PRIVATE KEY ----";
+    char s2[] = "---- END FHE PRIVATE KEY ----";
+
+    ret = format_privatekey_str(prikey, buffer, &length);
+    ret = gen_prikey_header(prikey, header, length);
+
+    if((out = fopen(prikey_filename,"wt")) == NULL){
+        fprintf(stderr,"Cannot open privatekey file\n");
+    }
+
+    fprintf(out, "%s\n", s1);
+    fprintf(out, "%s\n", header);
+    for (i = 0; i < length; i++) {
+
+        base64_encode(buffer[i], strlen(buffer[i]), base64);
+        fprintf(out, "%s\n", base64);
+    }
+    ret = fprintf(out, "%s\n", s2);
+    free(base64);
+    fclose(out);
+    free(header);
+    for (i = length - 1; i >= 0; i--)   free(buffer[i]);
+    return ret;
+}
+
+int read_prikey(__prikey* prikey, const char* prikey_filename) {
+    int ret = 0;
+    if (prikey == NULL || prikey_filename == NULL) {
+        return -1;
+    }
+
+    FILE* in;
+    char tmp[10];
+    int i = 0, j = 0, length;
+    int base64_len  = prikey->sk_bit_cnt/2;
+    int buffer_ilen = prikey->sk_bit_cnt/3;
+    char** buffer = (char**)malloc(W/8 * sizeof(char*));
+    char*  base64 = (char*)malloc(base64_len * sizeof(char));
+    char*  header = (char*)malloc(W*8 * sizeof(char));
+
+    if((in = fopen(prikey_filename,"r"))== NULL){
+        fprintf(stderr,"Cannot open privatekey file\n");
+    }
+
+    while (!feof(in)) {
+        if (i < PRIHL) {
+            header = fgets(header, W*8, in);
+            strncpy(tmp, header, 5);
+            if (strcmp(tmp, "Lines") == 0) {
+                strcpy(tmp, header + 7);
+                sscanf(tmp, "%d\n", &length);
+            }
+            i++;
+        } else {
+            if (j == length)    break;
+            ret = fscanf(in, "%s\n", base64);
+            buffer[j] = (char*)malloc(buffer_ilen * sizeof(char));
+            memset(buffer[j], '\0', buffer_ilen * sizeof(char));
+            base64_decode(base64, strlen(base64), buffer[j]);
+            j++;
+        }
+    }
+    format_str_privatekey(buffer, length, prikey);
+
+    free(header);
+    free(base64);
+    for(i = length - 1; i >= 0; i--)    free(buffer[i]);
+    free(buffer);
+    fclose(in);
+    return ret;
+}
 
  int save_pubkey(__pubkey_set* pubkey, const char* pubkey_filename){
      int ret = 0;
