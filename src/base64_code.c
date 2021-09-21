@@ -1,4 +1,4 @@
-/* Copyright (C) 2018-2019 SAU Network Communication Research Room.
+/** Copyright (C) 2018-2019 SAU Network Communication Research Room.
  * This program is Licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
@@ -9,15 +9,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License. See accompanying LICENSE file.
  */
- /*
+/**
  *This code is created Created by guofu on 2017/5/25.
  *Copyright c 2017 guofu. All rights reserved.
  *https://www.jianshu.com/p/125c4bbed460
  */
 
- #include <gmp.h>
- #include "dghv.h"
-
+#include "dghv.h"
 
 
 static char base64_table[] = {
@@ -31,15 +29,13 @@ static char base64_table[] = {
 };
 
 int static base64_map(char *in_block, int len) {
-    int i;
-    for(i = 0; i < len; ++i) {
+    for (int i = 0; i < len; ++i) {
         in_block[i] = base64_table[in_block[i]];
     }
-    if(len % 4 == 3){
-        in_block[len] = '=';
-        len++;
-    }else if(len % 4 == 2){
-        in_block[len] = in_block[len+1] = '=';
+    if (len % 4 == 3) {
+        in_block[len++] = '=';
+    } else if (len % 4 == 2) {
+        in_block[len] = in_block[len + 1] = '=';
         len += 2;
     }
 

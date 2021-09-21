@@ -21,8 +21,10 @@
 #include <time.h>
 #include <sys/time.h>
 #include <string>
+#include <cstring>
 #include <math.h>
 #include <gmp.h>
+#include <gmpxx.h>
 
 // is a parameter level. See secstg.h you can also set it yourself and verify that the parameters are reasonable with the
 //bool para_valid (__sec_setting-para)
@@ -246,8 +248,13 @@ unsigned long get_seed();
 //Random state type randstate, seed random seed
 void set_randstate(randstate rs, unsigned long seed);
 
-//Produces random numbers that do not exceed n bit bits
-//rn：mpz_t type of random number, rs random state, n random number length
+/**
+ * @brief Produces random numbers that do not exceed n bit bits
+ *
+ * @param rn mpz_t type of random number
+ * @param rs random state
+ * @param n random number length
+ */
 void gen_rrandomb(mpz_t rn, randstate rs, unsigned long n);
 
 //Produces a random number that does not exceed the large integer ub
@@ -412,9 +419,15 @@ void c_get_hw(int i, __ev_table* ev_table, __sec_setting* para, mpz_t x0);
 //Take the redaction ciph minimum valid bit, encrypt the minimum valid bit obtained redaction is stored in cc
 void c_get_ciph_lsb(__cit* cc, __cit* ciph, __pubkey_set* pubkey, __sec_setting* para, randstate rs);
 
-//Take c/p = 「c∑siyi」+（error does not write out, hahaha) the lowest effective bit, is calculated out the decimal point before and the last digit of the redaction in summation is his lowest significant bit of redaction
-//ciph The redaction that needs to be calculated
-//cc The redaction of the lowest significant bit calculated
+/**
+ * @brief
+ *  Take c/p = 「c∑(si.yi)」+（error does not write out, hahaha) the lowest effective bit, is calculated out the decimal point before and the last digit of the redaction in summation is his lowest significant bit of redaction
+ *
+ * @param cc The redaction of the lowest significant bit calculated
+ * @param ciph The redaction that needs to be calculated
+ * @param pubkey
+ * @param para
+ */
 void c_get_ciphdivp_lsb(__cit* cc, __cit* ciph, __pubkey_set* pubkey, __sec_setting* para);
 
 // Redaction refresh cc Refreshed redactions， ciph The redaction that was refreshed

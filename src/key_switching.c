@@ -1,4 +1,4 @@
-/* Copyright (C) 2018-2019 SAU Network Communication Research Room.
+/** Copyright (C) 2018-2019 SAU Network Communication Research Room.
  * This program is Licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
@@ -10,18 +10,17 @@
  * limitations under the License. See accompanying LICENSE file.
  */
 
- #include "dghv.h"
+#include "dghv.h"
 
 
-void Powersof2(mpf_t** s_expand, mpz_t* s, unsigned long length, unsigned long k){
-    int i, j;
+void Powersof2(mpf_t** s_expand, mpz_t* s, unsigned long length, unsigned long k) {
     mpf_t weight, fb;
     mpf_init(weight);
     mpf_init_set_ui(fb, BASE);
-    for(i = k - 1; i >= 0; i--){
+    for (int i = k - 1; i >= 0; i--) {
         mpf_pow_ui(weight, fb, i);
-        for(j = 0; j < length; j++){
-            if(mpz_cmp_ui(s[j], 1) == 0){
+        for (unsigned long j = 0; j < length; ++j) {
+            if (mpz_cmp_ui(s[j], 1) == 0) {
                 mpf_set(s_expand[k-i-1][j], weight);
             }
         }
@@ -29,8 +28,8 @@ void Powersof2(mpf_t** s_expand, mpz_t* s, unsigned long length, unsigned long k
     mpf_clear(weight);
 }
 
-void gen_switch_key(__rc_prikey* prikey, __rc_pubkey_set* pubkey, __sec_setting* para){
-    unsigned long i, j, seed;
+void gen_switch_key(__rc_prikey* prikey, __rc_pubkey_set* pubkey, __sec_setting* para) {
+    unsigned long seed;
     randstate rs;
     mpz_t r, ur, q, rq;
     mpf_t** s_expand;
@@ -41,10 +40,10 @@ void gen_switch_key(__rc_prikey* prikey, __rc_pubkey_set* pubkey, __sec_setting*
     mpz_init(q);
     mpz_init(rq);
 
-    s_expand = (mpf_t**)malloc(sizeof(mpf_t*) * (prikey->rsk_bit_cnt + 1));
-    for(i = 0; i < prikey->rsk_bit_cnt + 1; i++){
-        s_expand[i] = (mpf_t*)malloc(sizeof(mpf_t) * prikey->rsub_size);
-        for(j = 0; j < prikey->rsub_size; j++){
+    s_expand = (mpf_t**) malloc(sizeof (mpf_t*) * (prikey->rsk_bit_cnt + 1));
+    for (unsigned long i = 0; i < prikey->rsk_bit_cnt + 1; ++i) {
+        s_expand[i] = (mpf_t*) malloc(sizeof (mpf_t) * prikey->rsub_size);
+        for (unsigned long j = 0; j < prikey->rsub_size; ++j) {
             mpf_init_set_ui(s_expand[i][j], 0);
         }
     }
@@ -56,7 +55,7 @@ void gen_switch_key(__rc_prikey* prikey, __rc_pubkey_set* pubkey, __sec_setting*
     mpz_fdiv_q(q, q, prikey->rsk);
     gen_urandomm(rq, rs, q);
 
-    while(mpz_odd_p(rq) == 0){
+    while (mpz_odd_p(rq) == 0) {
         gen_urandomm(rq, rs, q);
     }
     mpz_mul(pubkey->rx0, rq, prikey->rsk);
@@ -78,9 +77,9 @@ void gen_switch_key(__rc_prikey* prikey, __rc_pubkey_set* pubkey, __sec_setting*
 
     mpf_div_2exp(val, rpf, prikey->rsk_bit_cnt + 1);
 
-    for(i = 0; i < prikey->rsk_bit_cnt + 1; i++){
-        for(j = 0; j < prikey->rsub_size; j++){
-            if(j == 0 && mpz_cmp_ui(prikey->sk_rsub[j], 1) == 0){
+    for (unsigned long i = 0; i < prikey->rsk_bit_cnt + 1; ++i) {
+        for (unsigned long j = 0; j < prikey->rsub_size; ++j) {
+            if (j == 0 && mpz_cmp_ui(prikey->sk_rsub[j], 1) == 0) {
                 gen_urandomm(q, rs, rq);
                 gen_urandomm(r, rs, ur);
                 mpz_mul(N, q, prikey->rsk);
@@ -105,11 +104,11 @@ void gen_switch_key(__rc_prikey* prikey, __rc_pubkey_set* pubkey, __sec_setting*
     mpf_clear(val);
     mpf_clear(rpf);
     mpf_clear(ref);
-    for(i = 0; i < prikey->rsk_bit_cnt + 1; i++){
-        for(j = 0; j < prikey->rsub_size; j++){
+    for (unsigned long i = 0; i < prikey->rsk_bit_cnt + 1; ++i) {
+        for (unsigned long j = 0; j < prikey->rsub_size; ++j) {
             mpf_clear(s_expand[i][j]);
         }
-        if(s_expand[i] != NULL) free(s_expand[i]);
+        if (s_expand[i] != NULL) free(s_expand[i]);
 
     }
 

@@ -1,4 +1,4 @@
-/* Copyright (C) 2018-2019 SAU Network Communication Research Room.
+/** Copyright (C) 2018-2019 SAU Network Communication Research Room.
  * This program is Licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
@@ -11,34 +11,32 @@
  */
 
 
- #include "dghv.h"
+#include "dghv.h"
 
- void BitDecomp(unsigned long** c_expand, mpz_t* z, unsigned long length, unsigned long k){
-     unsigned long i, j;
-     int binary_length;
-     char *binary_str;
+void BitDecomp(unsigned long** c_expand, mpz_t* z, unsigned long length, unsigned long k) {
+    char *binary_str;
 
-     binary_str = (char *)malloc((k+2)*sizeof(char));
+    binary_str = (char *) malloc((k+2) * sizeof (char));
 
-     for(i = 0; i < length; i++){
-         mpz_get_str(binary_str, 2, z[i]);
-         mpz_clear(z[i]);
-         binary_length = strlen(binary_str);
-         if(binary_length < k && binary_length >= 0){
-             for(j = 0; j < k - binary_length; j++){
-                 c_expand[i][j]=0;
-             }
-             for(j = k - binary_length; j < k; j++){
-                 c_expand[i][j]=binary_str[j - k + binary_length] - '0';
-             }
-         }else if(binary_length >= k){
-            for(j = 0; j < k; j++){
-                c_expand[i][j]=binary_str[j] - '0';
+    for (unsigned long i = 0; i < length; ++i) {
+        mpz_get_str(binary_str, 2, z[i]);
+        mpz_clear(z[i]);
+        unsigned long binary_length = strlen(binary_str);
+        if (binary_length < k) {
+            for (unsigned long j = 0; j < k - binary_length; ++j) {
+                c_expand[i][j] = 0;
+            }
+            for (unsigned long j = k - binary_length; j < k; ++j) {
+                c_expand[i][j] = binary_str[j - k + binary_length] - '0';
+            }
+        } else {
+            for (unsigned long j = 0; j < k; j++) {
+                c_expand[i][j] = binary_str[j] - '0';
             }
         }
     }
     free(binary_str);
- }
+}
 
  void mod_switch(__cit* newer, __cit* old, __rc_pubkey_set* pubkey, __sec_setting* para){
 

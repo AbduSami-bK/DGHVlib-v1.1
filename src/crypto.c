@@ -1,4 +1,4 @@
-/* Copyright (C) 2018-2019 SAU Network Communication Research Room.
+/** Copyright (C) 2018-2019 SAU Network Communication Research Room.
  * This program is Licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
@@ -36,7 +36,6 @@ void DGHV_encrypt(__cit* ciphertext, unsigned long plaintext, __pubkey_set* pubk
  	mpz_add(ciphertext->c, ciphertext->c, rn);
  	mpz_clear(rn);
 }
-
 
 unsigned long DGHV_decrypt(__cit* ciphertext, __prikey* prikey) {
  	mpz_t plaintext;

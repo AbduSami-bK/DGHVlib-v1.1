@@ -1,4 +1,4 @@
-/* Copyright (C) 2018-2019 SAU Network Communication Research Room.
+/** Copyright (C) 2018-2019 SAU Network Communication Research Room.
  * This program is Licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
@@ -10,62 +10,62 @@
  * limitations under the License. See accompanying LICENSE file.
  */
 
- #include "dghv.h"
+#include "dghv.h"
 
- void init_sc_sk(__sc_prikey** prikey, __sec_setting* para){
+void init_sc_sk(__sc_prikey** prikey, __sec_setting* para) {
 
+    unsigned long i, t;
+    int b, rsub;
+    int add_cnt;
+    int reduce_cnt;
 
-     int i, t, b, rsub;
-     int add_cnt = 0;
-     int reduce_cnt = 0;
+    *prikey = (__sc_prikey*) malloc(sizeof (__sc_prikey));
 
-     *prikey = (__sc_prikey*)malloc(sizeof(__sc_prikey));
+    //printf("Theta:%lu\nbeta:%lu\n", para->Theta, (size_t) sqrt(para->tau*1.0));
+    t = (int) floor(sqrt(para->theta));
+    //printf("theta:%lu\nsqrt(theta):%d\n", para->theta, t);
 
-     //printf("Theta:%lu\nbeta:%lu\n",para->Theta,(size_t)sqrt(para->tau*1.0));
-     t = (int)floor(sqrt(para->theta));
-     //printf("theta:%lu\nsqrt(theta):%d\n",para->theta,t);
-
-     if(t * 1.0 == sqrt(para->theta)){
-         (*prikey)->s0_group_cnt = t;
-         (*prikey)->s1_group_cnt = t;
-     }
-
-     if(para->theta <= t * (t + 1)){
-         (*prikey)->s0_group_cnt = t + 1;
-         (*prikey)->s1_group_cnt = t;
-     }
-
-     if((para->theta > t * (t + 1)) && (para->theta < (t + 1) * (t + 1))){
-         (*prikey)->s0_group_cnt = t + 1;
-         (*prikey)->s1_group_cnt = t + 1;
-     }
-
-     //printf("s0_group_cnt:%lu\ns1_group_cnt:%lu\n",(*prikey)->s0_group_cnt,(*prikey)->s1_group_cnt);
-
-     (*prikey)->s0 = (unsigned long**)malloc((*prikey)->s0_group_cnt * sizeof(unsigned long*));
-     (*prikey)->s1 = (unsigned long**)malloc((*prikey)->s1_group_cnt * sizeof(unsigned long*));
-
-     b=(int)round(sqrt(para->Theta / ((*prikey)->s0_group_cnt * (*prikey)->s1_group_cnt) * 1.0));
-     rsub=para->Theta - (*prikey)->s0_group_cnt * (*prikey)->s1_group_cnt * b * b;
-
-     printf("b=sqrt(B):%d\n",b);
-
-     if(rsub == 0){
-         (*prikey)->every_group_length = b;
-         (*prikey)->last_group_length = b;
-         (*prikey)->fill_cnt = 0;
-     }else if(rsub < 0){
-         (*prikey)->every_group_length = b;
-         reduce_cnt = (int)ceil(rsub * (-1) / ((*prikey)->s0_group_cnt*b*1.0));
-
-         (*prikey)->last_group_length = b - reduce_cnt;
-         (*prikey)->fill_cnt = reduce_cnt * (*prikey)->s0_group_cnt * b + rsub;
-     }else if(rsub > 0){
-         (*prikey)->every_group_length = b;
-         add_cnt = (int)floor(rsub / ((*prikey)->s0_group_cnt*b*1.0)) * (-1);
-         (*prikey)->last_group_length = b + add_cnt;
-         (*prikey)->fill_cnt = rsub + add_cnt * (*prikey)->s0_group_cnt * b;
+    if (t * 1.0 == sqrt(para->theta)) {
+        (*prikey)->s0_group_cnt = t;
+        (*prikey)->s1_group_cnt = t;
     }
+
+    if (para->theta <= t * (t + 1)) {
+        (*prikey)->s0_group_cnt = t + 1;
+        (*prikey)->s1_group_cnt = t;
+    }
+
+    if((para->theta > t * (t + 1)) && (para->theta < (t + 1) * (t + 1))){
+        (*prikey)->s0_group_cnt = t + 1;
+        (*prikey)->s1_group_cnt = t + 1;
+    }
+
+    //printf("s0_group_cnt:%lu\ns1_group_cnt:%lu\n",(*prikey)->s0_group_cnt,(*prikey)->s1_group_cnt);
+
+    (*prikey)->s0 = (unsigned long**)malloc((*prikey)->s0_group_cnt * sizeof(unsigned long*));
+    (*prikey)->s1 = (unsigned long**)malloc((*prikey)->s1_group_cnt * sizeof(unsigned long*));
+
+    b=(int)round(sqrt(para->Theta / ((*prikey)->s0_group_cnt * (*prikey)->s1_group_cnt) * 1.0));
+    rsub=para->Theta - (*prikey)->s0_group_cnt * (*prikey)->s1_group_cnt * b * b;
+
+    printf("b=sqrt(B):%d\n",b);
+
+    if(rsub == 0){
+        (*prikey)->every_group_length = b;
+        (*prikey)->last_group_length = b;
+        (*prikey)->fill_cnt = 0;
+    }else if(rsub < 0){
+        (*prikey)->every_group_length = b;
+        reduce_cnt = (int)ceil(rsub * (-1) / ((*prikey)->s0_group_cnt*b*1.0));
+
+        (*prikey)->last_group_length = b - reduce_cnt;
+        (*prikey)->fill_cnt = reduce_cnt * (*prikey)->s0_group_cnt * b + rsub;
+    }else if(rsub > 0){
+        (*prikey)->every_group_length = b;
+        add_cnt = (int)floor(rsub / ((*prikey)->s0_group_cnt*b*1.0)) * (-1);
+        (*prikey)->last_group_length = b + add_cnt;
+        (*prikey)->fill_cnt = rsub + add_cnt * (*prikey)->s0_group_cnt * b;
+}
 
     /*
     printf("every_group_length:%lu\n",(*prikey)->every_group_length);

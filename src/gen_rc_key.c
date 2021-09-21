@@ -1,4 +1,4 @@
-/* Copyright (C) 2018-2019 SAU Network Communication Research Room.
+/** Copyright (C) 2018-2019 SAU Network Communication Research Room.
  * This program is Licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
@@ -12,16 +12,15 @@
 #include "dghv.h"
 
 
-void gen_rc_prikey(__rc_prikey* prikey, randstate rs){
+void gen_rc_prikey(__rc_prikey* prikey, randstate rs) {
     gen_prime(prikey->sk, prikey->sk_bit_cnt, rs);
     gen_prime(prikey->rsk, prikey->rsk_bit_cnt, rs);
     randomize_ss(prikey->sk_rsub, prikey->rsub_hw, prikey->rsub_size);
 }
 
 
-void gen_rc_pubkey(__rc_pubkey_set* pubkey, __rc_prikey* prikey, __sec_setting* para){
+void gen_rc_pubkey(__rc_pubkey_set* pubkey, __rc_prikey* prikey, __sec_setting* para) {
 
-    unsigned long i;
     mpz_t kai, ksi, rnd, q;
     mpz_t u_kai, u_ksi, u_rnd;
     randstate rs_kai, rs_ksi, rs_rnd;
@@ -44,7 +43,7 @@ void gen_rc_pubkey(__rc_pubkey_set* pubkey, __rc_prikey* prikey, __sec_setting* 
     mpz_ui_pow_ui(u_rnd, 2, para->rho);
     mpz_fdiv_q(u_ksi, u_ksi, prikey->sk);
 
-    for(i = 0; i < pubkey->pks_size; i++){
+    for (unsigned long i = 0; i < pubkey->pks_size; i++) {
         gen_urandomm(kai, rs_kai, u_kai);
         gen_urandomm(ksi, rs_ksi, u_ksi);
         gen_urandomm(rnd, rs_rnd, u_rnd);
@@ -60,7 +59,7 @@ void gen_rc_pubkey(__rc_pubkey_set* pubkey, __rc_prikey* prikey, __sec_setting* 
     mpz_ui_pow_ui(q, 2, para->gam);
     mpz_fdiv_q(q, q, prikey->sk);
     gen_urandomm(q, rs_rnd, q);
-    if(mpz_odd_p(q) == 0){
+    if (mpz_odd_p(q) == 0) {
         gen_urandomm(q, rs_rnd, q);
     }
     mpz_mul(pubkey->x0, q, prikey->sk);
@@ -83,9 +82,9 @@ void gen_rc_pubkey(__rc_pubkey_set* pubkey, __rc_prikey* prikey, __sec_setting* 
 
 }
 
-void randomize_rsk(mpz_t* yy, mpz_t p, size_t rsk_bit_cnt, size_t ss_hw, size_t prec){
+void randomize_rsk(mpz_t* yy, mpz_t p, size_t rsk_bit_cnt, size_t ss_hw, size_t prec) {
 
-    unsigned long i, j;
+    unsigned long i;
     mpz_t qz, r,res, xp;
     mpf_t vf, pf, uf ,ba;
 
@@ -109,75 +108,75 @@ void randomize_rsk(mpz_t* yy, mpz_t p, size_t rsk_bit_cnt, size_t ss_hw, size_t 
     mpf_round_mpz(xp, vf);
 
     mpz_fdiv_qr_ui(qz, r, xp, ss_hw);
-    for(i=0; i<ss_hw; i++){
-
+    for (i = 0; i < ss_hw; ++i) {
         mpz_add(yy[i], yy[i], qz);
     }
     mpz_add(yy[i-1], yy[i-1], r);
 
-    for(i=0; i<ss_hw; i++){
-       mpz_fdiv_qr_ui(qz, r, yy[i], rand()%ss_hw+1);
-       mpz_add(res, qz, r);
-       mpz_sub(yy[i], yy[i], res);
+    for (i = 0; i < ss_hw; ++i) {
+        mpz_fdiv_qr_ui(qz, r, yy[i], rand() % ss_hw + 1);
+        mpz_add(res, qz, r);
+        mpz_sub(yy[i], yy[i], res);
 
-       mpz_fdiv_qr_ui(qz, r, res, ss_hw);
-       mpz_add(res,r,qz);
+        mpz_fdiv_qr_ui(qz, r, res, ss_hw);
+        mpz_add(res, r, qz);
 
-       for(j=0; j<ss_hw; j++){
-           if(j==i){
-               mpz_add(yy[j], yy[j], res);
+        for (unsigned long j = 0; j < ss_hw; ++j) {
+            if (j == i) {
+                mpz_add(yy[j], yy[j], res);
 
-           }else{
-               mpz_add(yy[j], yy[j], qz);
-           }
-       }
-   }
+            } else {
+                mpz_add(yy[j], yy[j], qz);
+            }
+        }
+    }
 
-   mpz_clear(qz);
-   mpz_clear(r);
-   mpz_clear(res);
-   mpz_clear(xp);
-   mpf_clear(vf);
-   mpf_clear(pf);
-   mpf_clear(uf);
-   mpf_clear(ba);
+    mpz_clear(qz);
+    mpz_clear(r);
+    mpz_clear(res);
+    mpz_clear(xp);
+    mpf_clear(vf);
+    mpf_clear(pf);
+    mpf_clear(uf);
+    mpf_clear(ba);
 
 }
 
-void expand_rc_p2y(__rc_pubkey_set* pubkey, __rc_prikey* prikey, size_t prec, randstate rs){
-    int i, j;
+void expand_rc_p2y(__rc_pubkey_set* pubkey, __rc_prikey* prikey, size_t prec, randstate rs) {
+    unsigned long i;
+    int j;
     mpz_t* yy;
-    mpz_t rn,ui;
-    mpf_t nu,de, bb;  //de 分母 nu 分子
+    mpz_t rn, ui;
+    mpf_t nu, de, bb;  //de 分母 nu 分子
 
     mpz_init(rn);
     mpz_init(ui);
     mpf_init(nu);
     mpf_init(de);
     mpf_init_set_ui(bb, BASE);
-    yy = (mpz_t*)malloc(prikey->rsub_hw * sizeof(mpz_t));
-    for(i = 0; i < prikey->rsub_hw; i++){
+    yy = (mpz_t*) malloc(prikey->rsub_hw * sizeof (mpz_t));
+    for (i = 0; i < prikey->rsub_hw; ++i) {
         mpz_init_set_ui(yy[i], 0);
     }
 
     randomize_rsk(yy, prikey->sk, prikey->rsk_bit_cnt, prikey->rsub_hw, prec);
 
-    mpz_ui_pow_ui(ui,BASE,prec+1);
-    mpf_pow_ui(de,bb,prec);
+    mpz_ui_pow_ui(ui, BASE, prec+1);
+    mpf_pow_ui(de, bb, prec);
 
-    for(i=0, j=0; i<pubkey->y_size; i++){
-       if(mpz_cmp_ui(prikey->sk_rsub[i], 0) == 0){
-           gen_urandomm(rn, rs, ui);
-           mpf_set_z(nu,rn);
-       }else if(mpz_cmp_ui(prikey->sk_rsub[i], 1) == 0){
-           mpf_set_z(nu,yy[j]);
-           j++;
-       }
-       mpf_div(pubkey->y[i],nu,de);
+    for (i = 0, j = 0; i < pubkey->y_size; ++i) {
+        if (mpz_cmp_ui(prikey->sk_rsub[i], 0) == 0) {
+            gen_urandomm(rn, rs, ui);
+            mpf_set_z(nu, rn);
+        } else if (mpz_cmp_ui(prikey->sk_rsub[i], 1) == 0) {
+            mpf_set_z(nu, yy[j]);
+            ++j;
+        }
+        mpf_div(pubkey->y[i], nu, de);
     }
 
-    for(i = 0; i < prikey->rsub_hw; i++) mpz_clear(yy[i]);
-    if(yy != NULL) free(yy);
+    for (i = 0; i < prikey->rsub_hw; ++i)   mpz_clear(yy[i]);
+    if (yy != NULL) free(yy);
     mpz_clear(rn);
     mpz_clear(ui);
     mpf_clear(nu);

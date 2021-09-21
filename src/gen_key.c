@@ -68,36 +68,35 @@
        return false;
    }
 
- void getQs(mpz_t* q, mpz_t p, size_t gam, size_t tau, size_t lam, randstate rs){
+void getQs(mpz_t* q, mpz_t p, size_t gam, size_t tau, size_t lam, randstate rs) {
 
-     int i;
-     mpz_t ub, lr; //ub 随机数； lr lam-rough 安全系数结果
+    mpz_t ub, lr; //ub 随机数； lr lam-rough 安全系数结果
 
-     mpz_init(ub);
-     mpz_init(lr);
+    mpz_init(ub);
+    mpz_init(lr);
 
-     mpz_ui_pow_ui(ub,BASE,gam);
-     mpz_fdiv_q(ub,ub,p);
-     mpz_ui_pow_ui(lr, BASE, lam);
+    mpz_ui_pow_ui(ub,BASE,gam);
+    mpz_fdiv_q(ub,ub,p);
+    mpz_ui_pow_ui(lr, BASE, lam);
 
-     mpz_init(q[0]);
-     do{
-         gen_urandomm(q[0], rs, ub);
-     }while(mpz_odd_p(q[0]) == 0 || !is_a_rough(q[0], lr));
+    mpz_init(q[0]);
+    do {
+        gen_urandomm(q[0], rs, ub);
+    } while (mpz_odd_p(q[0]) == 0 || !is_a_rough(q[0], lr));
 
-     //mpz_set(ub, q[0]);
-     mpz_fdiv_q_ui(ub,q[0],8);
-     for(i = 1; i < tau; i++){
-         mpz_init(q[i]);
-         do{
-         	gen_urandomm(q[i], rs, ub);
-        }while(!is_a_rough(q[i], lr));
+    //mpz_set(ub, q[0]);
+    mpz_fdiv_q_ui(ub,q[0],8);
+    for (unsigned long i = 1; i < tau; ++i) {
+        mpz_init(q[i]);
+        do {
+            gen_urandomm(q[i], rs, ub);
+        } while(!is_a_rough(q[i], lr));
         //gen_urandomm(q[i], rs, ub);
-     }
-     mpz_clear(ub);
-     mpz_clear(lr);
+    }
+    mpz_clear(ub);
+    mpz_clear(lr);
 
- }
+}
 
  void randomize_ss(mpz_t* ss, size_t ss_hw, size_t ss_size){
      unsigned long  seed = get_seed();
@@ -113,37 +112,36 @@
  	 }
  }
 
- void randomize_sk(mpz_t* yy, mpz_t p, size_t ss_hw, size_t prec){
-     int i, j;
-     mpz_t q, r,res, xp;
+void randomize_sk(mpz_t* yy, mpz_t p, size_t ss_hw, size_t prec) {
+    unsigned long i;
+    mpz_t q, r,res, xp;
 
-     mpz_init(q);
-     mpz_init(r);
- 	 mpz_init(res);
- 	 mpz_init(xp);
+    mpz_init(q);
+    mpz_init(r);
+    mpz_init(res);
+    mpz_init(xp);
 
-     mpz_ui_pow_ui(xp, 2, prec);
- 	 div_round_q(xp, xp, p);
- 	 mpz_fdiv_qr_ui(q, r, xp, ss_hw);
-     for(i=0; i<ss_hw; i++){
-         mpz_init_set_ui(yy[i], 0);
- 		 mpz_add(yy[i], yy[i], q);
+    mpz_ui_pow_ui(xp, 2, prec);
+    div_round_q(xp, xp, p);
+    mpz_fdiv_qr_ui(q, r, xp, ss_hw);
+    for (i = 0; i < ss_hw; ++i) {
+        mpz_init_set_ui(yy[i], 0);
+        mpz_add(yy[i], yy[i], q);
  	}
     mpz_add(yy[i-1], yy[i-1], r);
 
-     for(i=0; i<ss_hw; i++){
- 		mpz_fdiv_qr_ui(q, r, yy[i], rand()%ss_hw+1);
+    for (i = 0; i < ss_hw; ++i) {
+        mpz_fdiv_qr_ui(q, r, yy[i], rand()%ss_hw+1);
  		mpz_add(res, q, r);
  		mpz_sub(yy[i], yy[i], res);
 
  		mpz_fdiv_qr_ui(q, r, res, ss_hw);
  		mpz_add(res,r,q);
 
- 		for(j=0; j<ss_hw; j++){
- 			if(j==i){
+ 		for (unsigned long j = 0; j < ss_hw; ++j) {
+ 			if (j == i) {
  				mpz_add(yy[j], yy[j], res);
-
- 			}else{
+ 			} else {
  				mpz_add(yy[j], yy[j], q);
  			}
  		}
@@ -156,42 +154,43 @@
  }
 
 
- void expand_p2y(__pubkey_set* pubkey, __prikey* prikey, size_t prec, randstate rs){
-     int i, j;
-     mpz_t* yy;
-     mpz_t rn,ui;
- 	 mpf_t nu,de, bb;  //de 分母 nu 分子
+void expand_p2y(__pubkey_set* pubkey, __prikey* prikey, size_t prec, randstate rs) {
+    unsigned long i;
+    int j;
+    mpz_t* yy;
+    mpz_t rn,ui;
+    mpf_t nu,de, bb;  //de 分母 nu 分子
 
-     mpz_init(rn);
-     mpz_init(ui);
-     mpf_init(nu);
- 	 mpf_init(de);
-     mpf_init_set_ui(bb, BASE);
-     yy = (mpz_t*)malloc(prikey->rsub_hw * sizeof(mpz_t));
-     randomize_sk(yy, prikey->sk, prikey->rsub_hw, prec);
+    mpz_init(rn);
+    mpz_init(ui);
+    mpf_init(nu);
+    mpf_init(de);
+    mpf_init_set_ui(bb, BASE);
+    yy = (mpz_t*) malloc(prikey->rsub_hw * sizeof (mpz_t));
+    randomize_sk(yy, prikey->sk, prikey->rsub_hw, prec);
 
-     mpz_ui_pow_ui(ui,BASE,prec+1);
- 	 mpf_pow_ui(de,bb,prec);
+    mpz_ui_pow_ui(ui, BASE, prec + 1);
+    mpf_pow_ui(de, bb, prec);
 
-     for(i=0, j=0; i<pubkey->y_size; i++){
- 		if(mpz_cmp_ui(prikey->sk_rsub[i], 0) == 0){
- 			gen_urandomm(rn, rs, ui);
+    for (i = 0, j = 0; i < pubkey->y_size; ++i) {
+ 		if (mpz_cmp_ui(prikey->sk_rsub[i], 0) == 0) {
+            gen_urandomm(rn, rs, ui);
  			mpf_set_z(nu,rn);
- 		}else if(mpz_cmp_ui(prikey->sk_rsub[i], 1) == 0){
+ 		} else if (mpz_cmp_ui(prikey->sk_rsub[i], 1) == 0) {
  			mpf_set_z(nu,yy[j]);
  			j++;
  		}
  		mpf_div(pubkey->y[i],nu,de);
- 	 }
+    }
 
-     for(i = 0; i < prikey->rsub_hw; i++) mpz_clear(yy[i]);
-     free(yy);
-     mpz_clear(rn);
- 	 mpz_clear(ui);
-     mpf_clear(nu);
- 	 mpf_clear(de);
-     mpf_clear(bb);
- }
+    for (i = 0; i < prikey->rsub_hw; ++i)   mpz_clear(yy[i]);
+    free(yy);
+    mpz_clear(rn);
+    mpz_clear(ui);
+    mpf_clear(nu);
+    mpf_clear(de);
+    mpf_clear(bb);
+}
 
  void encrypt_sk(__pubkey_set* pubkey, __prikey* prikey, randstate rs, size_t Rho){
      unsigned long i, r;
@@ -223,35 +222,34 @@
      randomize_ss(prikey->sk_rsub, prikey->rsub_hw, prikey->rsub_size);
  }
 
- void gen_pubkey(__pubkey_set* pubkey, __prikey* prikey, __sec_setting* para, randstate rs, int model){
-     int i;
-     mpz_t* qs;
-     mpz_t rn;
- 	 mpz_init(rn);
-     qs = (mpz_t*)malloc(para->tau * sizeof(mpz_t));
-     getQs(qs, prikey->sk, pubkey->pk_bit_cnt, pubkey->pks_size, para->lam, rs);
+void gen_pubkey(__pubkey_set* pubkey, __prikey* prikey, __sec_setting* para, randstate rs, int model) {
+    mpz_t* qs;
+    mpz_t rn;
+    mpz_init(rn);
+    qs = (mpz_t*)malloc(para->tau * sizeof(mpz_t));
+    getQs(qs, prikey->sk, pubkey->pk_bit_cnt, pubkey->pks_size, para->lam, rs);
 
-     for(i = 0; i < pubkey->pks_size; i++){
-         gen_rrandomb(rn, rs, para->rho);
-         if(i == 0){
-             mpz_mul(pubkey->pks[i], prikey->sk, qs[i]);
-             mpz_set(pubkey->x0,pubkey->pks[i]);
-         }else{
-             mpz_mul(pubkey->pks[i], prikey->sk, qs[i]);
-             mpz_mul_ui(rn, rn, 2);
-             mpz_add(pubkey->pks[i], pubkey->pks[i], rn);
-         }
-     }
+    for (unsigned long i = 0; i < pubkey->pks_size; ++i) {
+        gen_rrandomb(rn, rs, para->rho);
+        if (i == 0) {
+            mpz_mul(pubkey->pks[i], prikey->sk, qs[i]);
+            mpz_set(pubkey->x0,pubkey->pks[i]);
+        } else {
+            mpz_mul(pubkey->pks[i], prikey->sk, qs[i]);
+            mpz_mul_ui(rn, rn, 2);
+            mpz_add(pubkey->pks[i], pubkey->pks[i], rn);
+        }
+    }
 
-     if(model == 1){
-         encrypt_sk(pubkey, prikey, rs, para->Rho);
-     }
-     time_t t;
-     struct tm *lt;
-     t = time(NULL);
-     lt = localtime(&t);
-     strftime(pubkey->gen_time, 20, "%Y-%m-%d %H:%M:%S", lt);
-     mpz_clear(rn);
+    if (model == 1) {
+        encrypt_sk(pubkey, prikey, rs, para->Rho);
+    }
+    time_t t;
+    struct tm *lt;
+    t = time(NULL);
+    lt = localtime(&t);
+    strftime(pubkey->gen_time, 20, "%Y-%m-%d %H:%M:%S", lt);
+    mpz_clear(rn);
 
 
- }
+}
