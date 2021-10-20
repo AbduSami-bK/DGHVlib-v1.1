@@ -16,8 +16,13 @@ void gen_rc_prikey(__rc_prikey* prikey, randstate rs) {
     gen_prime(prikey->sk, prikey->sk_bit_cnt, rs);
     gen_prime(prikey->rsk, prikey->rsk_bit_cnt, rs);
     randomize_ss(prikey->sk_rsub, prikey->rsub_hw, prikey->rsub_size);
-}
 
+    time_t t;
+    struct tm *lt;
+    t = time(NULL);
+    lt = localtime(&t);
+    strftime(prikey->gen_time, 20, "%Y-%m-%d %H:%M:%S", lt);
+}
 
 void gen_rc_pubkey(__rc_pubkey_set* pubkey, __rc_prikey* prikey, __sec_setting* para) {
 

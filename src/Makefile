@@ -13,7 +13,7 @@ CFLAGS  := -Wall $(DEBUGFLAGS) $(DEFINES) $(INCLUDE)
 CXXFLAGS:= $(CFLAGS) -DHAVE_CONFIG_H
 
 SOURCE  := $(wildcard *.c) $(wildcard *.cpp)
-OBJS    := $(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(SOURCE)))
+OBJS    := $(patsubst %.c, %.o, $(patsubst %.cpp, %.o, $(SOURCE)))
 
 .PHONY : everything objs clean veryclean rebuild
 

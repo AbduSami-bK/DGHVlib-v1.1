@@ -22,6 +22,7 @@
 #include <sys/time.h>
 #include <string>
 #include <cstring>
+#include <vector>
 #include <math.h>
 #include <gmp.h>
 #include <gmpxx.h>
@@ -35,8 +36,8 @@
 
 #define PROB_EXP              50
 #define BASE                  2
-#define PRIHL                 7
-#define PUBHL                 10
+#define PRIHL                 8
+#define PUBHL                 9
 
 #define W                     (GMP_NUMB_BITS/2)
 #define _LSBMASK              1ul
@@ -479,10 +480,11 @@ void mod_switch(__cit* newer, __cit* older, __rc_pubkey_set* pubkey, __sec_setti
 /****************  Base64 Encode & Decode.  ****************/
 
 //int base64_encode(char *indata, int inlen, char *outdata, int *outlen);
-int base64_encode(char *in, int inlen, char *out);
+int base64_encode(const char *in, int inlen, char *out);
 
 //int base64_decode(char *indata, int inlen, char *outdata, int *outlen);
-int base64_decode(char *in, int inlen, char *out) ;
+int base64_decode(const char *in, int inlen, char *out);
+int base64_decode(const char *in, std::size_t inlen, std::string &out);
 
 
 /****************  Format Ciphertext & Key Convert into String.  ****************/
@@ -492,8 +494,8 @@ char* format_ciphertext_str(__cit* ciph);
 int format_privatekey_str(__prikey* prikey, char **buffer, int *length);
 int format_rc_privatekey_str(__rc_prikey* prikey, char **buffer, int *length);
 
-int format_publickey_str(__pubkey_set* pubkey, char **buffer, int *length);
-int format_rc_publickey_str(__rc_pubkey_set* pubkey, char **buffer, int *length);
+int format_publickey_str(__pubkey_set *pubkey, char **buffer, int *length);
+std::vector<std::string> format_rc_publickey_str(__rc_pubkey_set *pubkey, int *length);
 
 
 /****************  Format String Convert into Ciphertext & Key.  ****************/
@@ -503,8 +505,8 @@ int format_str_ciphertext(const char* buffer,  __cit* ciph);
 int format_str_privatekey(char** buffer, int length, __prikey* prikey);
 int format_str_rc_privatekey(char** buffer, int length, __rc_prikey* prikey);
 
-int format_str_publickey(char** buffer, int length, __pubkey_set* pubkey);
-int format_str_rc_publickey(char** buffer, int length, __rc_pubkey_set* pubkey);
+int format_str_publickey(char **buffer, int length, __pubkey_set *pubkey);
+int format_str_rc_publickey(std::vector<std::string> &buffer, int length, __rc_pubkey_set *pubkey);
 
 
 /****************  Read & Write Key.  ****************/

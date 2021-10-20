@@ -13,6 +13,7 @@
 #include "dghv.h"
 #include <unistd.h>
 #include <fstream>
+#include <iostream>
 #include <string.h>
 
 static int gen_pubkey_header(__pubkey_set* pubkey, char* header, int lines) {
@@ -471,36 +472,35 @@ int save_rc_prikey(__rc_prikey* prikey, const char* prikey_filename) {
 	}
 
 	int length, i;
-	FILE *out;
+	std::ofstream out(prikey_filename);
 	char** buffer = (char**) malloc(4 * sizeof (char*));
 	char* header = (char*) malloc(W*W * sizeof (char));
 	//char*  base64 = (char*) malloc((prikey->sk_bit_cnt/2) * sizeof (char));
 	char* r_base64 = (char*) malloc((prikey->rsk_bit_cnt/2) * sizeof (char));
 
-	char s1[] = "---- BEGIN FHE PRIVATE KEY ----";
-	char s2[] = "---- END FHE PRIVATE KEY ----";
-
 	ret += format_rc_privatekey_str(prikey, buffer, &length);
 	ret += gen_rc_prikey_header(prikey, header, length);
 
-	if ((out = fopen(prikey_filename, "wt")) == NULL) {
+	if (!out.is_open()) {
 		fprintf(stderr, "Cannot open privatekey file\n");
+		return -2;
 	}
 
-	fprintf(out, "%s\n", s1);
-	fprintf(out, "%s\n", header);
+	out << "---- BEGIN FHE PRIVATE KEY ----\n";
+	out << header << "\n";
 	for (i = 0; i < length; ++i) {
 		base64_encode(buffer[i], strlen(buffer[i]), r_base64);	// TODO Test
-		fprintf(out, "%s\n", r_base64);
+		out << r_base64 << "\n";
 	}
-	ret += fprintf(out, "%s\n", s2);
+	out << "---- END FHE PRIVATE KEY ----\n";
+	ret += strlen("---- END FHE PRIVATE KEY ----\n");
 	free(r_base64);
-	fclose(out);
+	out.close();
 	free(header);
 	for (i = length - 1; i >= 0; --i)
 		free(buffer[i]);
 	free(buffer);
-	return ret;
+	return 0;
 }
 
 int read_rc_prikey(__rc_prikey* prikey, const char* prikey_filename) {
@@ -509,48 +509,43 @@ int read_rc_prikey(__rc_prikey* prikey, const char* prikey_filename) {
 		return -1;
 	}
 
-	FILE*	in;
-	char	tmp[10];
-	int		i = 0,
-			j = 0,
-			length;
-	int		r_base64_len	= prikey->rsk_bit_cnt/2;
-	int		buffer_ilen		= prikey->rsk_bit_cnt/3;
-	char**	buffer			= (char**)	malloc(4			* sizeof(char*));
-	char*	r_base64		= (char*)	malloc(r_base64_len	* sizeof(char))	;
-	char* 	header			= (char*)	malloc(W * 8		* sizeof(char))	;
+	std::ifstream	in				(prikey_filename);
+	int				length;
+	//int				r_base64_len	= prikey->rsk_bit_cnt/2;
+	int				buffer_ilen		= prikey->rsk_bit_cnt/3;
+	char			**buffer		= (char**)	malloc(4			* sizeof(char*));
+	std::string		r_base64		;//= (char*)	malloc(r_base64_len	* sizeof(char))	;
+	std::string		header			;//= (char*)	malloc(W * 8		* sizeof(char))	;
 
-	if ((in = fopen(prikey_filename, "r")) == NULL) {
+	if (!in.is_open()) {
 		fprintf(stderr, "Cannot open privatekey file\n");
 	}
 
-	while (!feof(in)) {
-		if (i < PRIHL) {
-			header = fgets(header, W*8, in);
-			strncpy(tmp, header, 5);
-			if (strcmp(tmp, "Lines") == 0) {
-				strcpy(tmp, header + 7);
-				sscanf(tmp, "%d\n", &length);
-			}
-			++i;
-		} else {
-			if (j == length)
-				break;
-			ret = fscanf(in, "%s\n", r_base64);
-			buffer[j] = (char*) malloc(buffer_ilen * sizeof(char));
-			memset(buffer[j], '\0', buffer_ilen * sizeof(char));
-			base64_decode(r_base64, strlen(r_base64), buffer[j]);
-			++j;
+	for (int i = 0; i < PRIHL; ++i) {
+		std::getline(in, header);
+		if (header.substr(0, 5).compare("Lines") == 0) {	// TODO test
+			length = std::stoi(header.substr(7));
+			break;
 		}
 	}
+
+	for (int i = 0; i != length; ++i) {
+		//ret = fscanf(in, "%s\n", r_base64);
+		std::getline(in, r_base64);
+		ret += r_base64.length();
+		buffer[i] = (char*) malloc(buffer_ilen * sizeof(char));
+		memset(buffer[i], '\0', buffer_ilen * sizeof(char));
+		base64_decode(r_base64.c_str(), r_base64.length(), buffer[i]);
+	}
+
 	format_str_rc_privatekey(buffer, length, prikey);
 
-	free(header);
-	free(r_base64);
-	for(i = length - 1; i >= 0; i--)
+	//header.clear();
+	//r_base64.clear();
+	for (int i = length - 1; i >= 0; i--)
 		free(buffer[i]);
 	free(buffer);
-	fclose(in);
+	in.close();
 	return ret;
 }
 
@@ -561,41 +556,41 @@ int save_rc_pubkey(__rc_pubkey_set* pubkey, const char* pubkey_filename) {
 	}
 
 	int i, length;
-	int buffer_len = 2 * pubkey->y_size + pubkey->pks_size + pubkey->sx * pubkey->sy + 4;
-	int base64_len = (pubkey->pk_bit_cnt + W*W*W)/2;
+	std::size_t buffer_len = 2 * pubkey->y_size + pubkey->pks_size + pubkey->sx * pubkey->sy + 4;
+	size_t base64_len = (pubkey->pk_bit_cnt + W*W*W)/2;
 
-	char** buffer = (char**) malloc(buffer_len * sizeof (char*));
+	//char** buffer = (char**) malloc(buffer_len * sizeof (char*));
+	std::vector<std::string> buffer;
+	buffer.reserve(buffer_len);
 	char*  header = (char* ) malloc(W * 10     * sizeof (char ));
 	char*  base64 = (char* ) malloc(base64_len * sizeof (char ));
 
-	char s1[] = "---- BEGIN FHE PUBLIC KEY ----";
-	char s2[] = "---- END FHE PUBLIC KEY ----";
-
-	ret += format_rc_publickey_str(pubkey, buffer, &length);
+	buffer = format_rc_publickey_str(pubkey, &length);
+	ret += length;
 	ret += gen_rc_pubkey_header(pubkey, header, length);
 
-	FILE *out;
-	if ((out = fopen(pubkey_filename, "wt")) == NULL) {
+	std::ofstream out(pubkey_filename);
+	if (!out.is_open()) {
 		fprintf(stderr, "Cannot open privatekey file\n");
 	}
 
-	fprintf(out, "%s\n", s1);
-	fprintf(out, "%s\n", header);
+	out << "---- BEGIN FHE PUBLIC KEY ----\n";
+	out << header << "\n";
 
 	for (i = 0; i < length; ++i) {
-		ret += base64_encode(buffer[i], strlen(buffer[i]), base64);
-		fprintf(out, "%s\n", base64);
+		ret += base64_encode(buffer[i].c_str(), buffer[i].length(), base64);
+		out << base64 << "\n";
 		memset(base64, '\0', base64_len * sizeof (char));
 	}
-	fprintf(out, "%s\n", s2);
+	out << "---- END FHE PUBLIC KEY ----\n";
 
 	free(base64);
-	fclose(out);
+	out.close();
 	free(header);
-	for (i = length - 1; i >= 0; --i) {
-		free(buffer[i]);
-	}
-	free(buffer);
+	//for (std::string str : buffer) {
+	//	str.clear();
+	//}
+	//buffer.clear();
 	return ret;
  }
 
@@ -605,40 +600,41 @@ int read_rc_pubkey(__rc_pubkey_set* pubkey, const char* pubkey_filename) {
 	}
 
 	int ret = 0;
-	int i = 0, j = 0;
-	int base64_len = (pubkey->pk_bit_cnt + W*W*W)/2;
+	//int base64_len = (pubkey->pk_bit_cnt + W*W*W)/2;
 	int buffer_len = 2 * pubkey->y_size + pubkey->pks_size + pubkey->sx * pubkey->sy + 4;
 	int buffer_j_len = pubkey->pk_bit_cnt/4 + W*W*W;
 
-	char** buffer = (char**) malloc(buffer_len * sizeof (char*));
-	char*  base64 = (char* ) malloc(base64_len * sizeof (char ));
-	char*  header = (char* ) malloc(W * 10     * sizeof (char ));
+	//char *buffer = (char**) malloc(buffer_len * sizeof (char*));
+	std::vector<std::string> buffer;
+	buffer.reserve(buffer_len);
+	std::string base64;	// = (char* ) malloc(base64_len * sizeof (char));
+	std::string header;	// = (char* ) malloc(W * 10     * sizeof (char));
 
-	FILE* in;
-	if ((in = fopen(pubkey_filename, "r")) == NULL) {
+	std::ifstream in(pubkey_filename);
+	if (!in.is_open()) {
 		fprintf(stderr, "Cannot open privatekey file\n");
 	}
 
-	while (!feof(in)) {
-		if (i < PUBHL) {
-			header = fgets(header, W * 10, in);
-			++i;
-		} else if (j < buffer_len) {
-			ret = fscanf(in, "%s", base64);
-			buffer[j] = (char*) malloc(buffer_j_len * sizeof (char));
-			memset(buffer[j], '\0', buffer_j_len * sizeof (char));
-			base64_decode(base64, strlen(base64), buffer[j]);
-			j++;
-		} else
-			break;
+	for (int i = 0; i < PUBHL; ++i) {
+		std::getline(in, header);
+	}
+
+	for (int j = 0; j < buffer_len; ++j) {
+		std::getline(in, base64);
+		ret += base64.length();
+		//buffer[j] = (char*) malloc(buffer_j_len * sizeof (char));
+		//memset(buffer[j], '\0', buffer_j_len * sizeof (char));
+		buffer[j] = std::string(buffer_j_len, '\0');
+		base64_decode(base64.c_str(), base64.length(), buffer[j]);
 	}
 	format_str_rc_publickey(buffer, buffer_len, pubkey);
 
-	free(header);
-	free(base64);
-	for(i = 0; i < buffer_len; i++)
-		free(buffer[i]);
-	free(buffer);
-	fclose(in);
+	//free(header);
+	//free(base64);
+	for (std::string str : buffer) {
+		str.clear();
+	}
+	buffer.clear();
+	in.close();
 	return ret;
 }
