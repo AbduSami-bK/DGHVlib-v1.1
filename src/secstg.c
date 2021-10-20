@@ -13,8 +13,8 @@
  #include "dghv.h"
 
 void init_sec_para(__sec_setting** para){
-    *para = (__sec_setting*)malloc(sizeof(__sec_setting));
-    if(*para == NULL){
+    *para = (__sec_setting*) malloc(sizeof (__sec_setting));
+    if (*para == NULL) {
         printf("memory allocation failed!\n");
         exit(1);
     }

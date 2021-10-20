@@ -28,3 +28,15 @@ void evaluate_mul(__cit* product, __cit* c1, __cit* c2, mpz_t x0)
 	mpz_mul(product->c, c1->c, c2->c);
 	mpz_mod(product->c, product->c, x0);
 }
+
+void evaluate_c_div_ui(__cit* ceil_quotient, __cit* dividend, unsigned long divisor, mpz_t x0)
+{
+	mpz_cdiv_q_ui(ceil_quotient->c, dividend->c, divisor);
+	mpz_mod(ceil_quotient->c, ceil_quotient->c, x0);
+}
+
+void evaluate_mod(__cit* result, __cit* c1, unsigned long modulo, mpz_t x0)
+{
+	mpz_mod_ui(result->c, c1->c, modulo);
+	mpz_mod(result->c, result->c, x0);
+}

@@ -5,10 +5,9 @@
 
 
 
-int main(){
-
-    int i, j;
-    double duration;
+int main()
+{
+    int i;
     clock_t start,finish;
 
 

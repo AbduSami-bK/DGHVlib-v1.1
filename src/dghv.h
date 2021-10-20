@@ -1,4 +1,4 @@
-/* Copyright (C) 2018-2019 SAU Network Communication Research Room.
+/** Copyright (C) 2018-2019 SAU Network Communication Research Room.
  * This program is Licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
@@ -36,7 +36,7 @@
 #define PROB_EXP              50
 #define BASE                  2
 #define PRIHL                 7
-#define PUBHL                 8
+#define PUBHL                 10
 
 #define W                     (GMP_NUMB_BITS/2)
 #define _LSBMASK              1ul
@@ -244,8 +244,12 @@ void clear_rc_pkset(__rc_pubkey_set* pubkey);
 //Get random seeds
 unsigned long get_seed();
 
-//Talk about random seeds combining with random states to prepare for the generation of random numbers
-//Random state type randstate, seed random seed
+/**
+ * @brief Set the randstate object
+ * Talk about random seeds combining with random states to prepare for the generation of random numbers
+ * @param rs Random state
+ * @param seed random seed
+ */
 void set_randstate(randstate rs, unsigned long seed);
 
 /**
@@ -290,7 +294,13 @@ void expand_rc_p2y(__rc_pubkey_set* pubkey, __rc_prikey* prikey, size_t prec, ra
 /****************  Generated Private Key & Public Key.  ****************/
 //gen_key.c
 
-//Produces prime prime number p, n random number length, rs random state
+/**
+ * @brief Produces prime
+ *
+ * @param p Output prime number
+ * @param n random number length
+ * @param rs random state
+ */
 void gen_prime(mpz_t p, size_t n, randstate rs);
 
 void mpf_round_mpz(mpz_t rop, mpf_t op);
@@ -358,7 +368,7 @@ void DGHV_encrypt(__cit* ciphertext, unsigned long plaintext, __pubkey_set* pubk
  *
  * @param ciphertext Decrypted redaction
  * @param prikey private key
- * @return unsigned long 
+ * @return unsigned long
  */
 unsigned long DGHV_decrypt(__cit* ciphertext, __prikey* prikey);
 
@@ -410,6 +420,10 @@ void evaluate_mul(__cit* product, __cit* c1, __cit* c2, mpz_t x0);
 
 void evaluate_sub(__cit* diff, __cit* c1, __cit* c2, mpz_t x0);
 
+void evaluate_c_div_ui(__cit* ceil_quotient, __cit* dividend, unsigned long divisor, mpz_t x0);
+
+void evaluate_mod(__cit* result, __cit* c1, unsigned long modulo, mpz_t x0);
+
 /****************  Bootstrapping.  ****************/
 //bootstrapping.c
 
@@ -430,7 +444,15 @@ void c_get_ciph_lsb(__cit* cc, __cit* ciph, __pubkey_set* pubkey, __sec_setting*
  */
 void c_get_ciphdivp_lsb(__cit* cc, __cit* ciph, __pubkey_set* pubkey, __sec_setting* para);
 
-// Redaction refresh cc Refreshed redactions， ciph The redaction that was refreshed
+/**
+ * @brief Redaction refresh
+ *
+ * @param cc Refreshed redactions
+ * @param ciph The redaction that was refreshed
+ * @param pubkey
+ * @param para
+ * @param rs
+ */
 void bootstrap(__cit* cc, __cit* ciph, __pubkey_set* pubkey, __sec_setting* para, randstate rs);
 
 void c_get_sc_ciph_lsb(__cit* cc, __cit* ciph, __sc_pubkey_set* pubkey, __sec_setting* para, randstate rs);
@@ -457,11 +479,9 @@ void mod_switch(__cit* newer, __cit* older, __rc_pubkey_set* pubkey, __sec_setti
 /****************  Base64 Encode & Decode.  ****************/
 
 //int base64_encode(char *indata, int inlen, char *outdata, int *outlen);
-
 int base64_encode(char *in, int inlen, char *out);
 
 //int base64_decode(char *indata, int inlen, char *outdata, int *outlen);
-
 int base64_decode(char *in, int inlen, char *out) ;
 
 
@@ -469,18 +489,22 @@ int base64_decode(char *in, int inlen, char *out) ;
 
 char* format_ciphertext_str(__cit* ciph);
 
-int format_privatekey_str(__prikey* prikey, char** buffer, int *length);
+int format_privatekey_str(__prikey* prikey, char **buffer, int *length);
+int format_rc_privatekey_str(__rc_prikey* prikey, char **buffer, int *length);
 
-int format_publickey_str(__pubkey_set* pubkey, char** buffer, int *length);
+int format_publickey_str(__pubkey_set* pubkey, char **buffer, int *length);
+int format_rc_publickey_str(__rc_pubkey_set* pubkey, char **buffer, int *length);
 
 
 /****************  Format String Convert into Ciphertext & Key.  ****************/
 
-int format_str_ciphertext(char* buffer,  __cit* ciph);
+int format_str_ciphertext(const char* buffer,  __cit* ciph);
 
 int format_str_privatekey(char** buffer, int length, __prikey* prikey);
+int format_str_rc_privatekey(char** buffer, int length, __rc_prikey* prikey);
 
 int format_str_publickey(char** buffer, int length, __pubkey_set* pubkey);
+int format_str_rc_publickey(char** buffer, int length, __rc_pubkey_set* pubkey);
 
 
 /****************  Read & Write Key.  ****************/
@@ -488,8 +512,10 @@ int format_str_publickey(char** buffer, int length, __pubkey_set* pubkey);
 int save_sec_para(__sec_setting* para, const char* filename);
 
 int save_prikey(__prikey* prikey, const char* prikey_filename);
+int save_rc_prikey(__rc_prikey* prikey, const char* prikey_filename);
 
 int save_pubkey(__pubkey_set* pubkey, const char* pubkey_filename);
+int save_rc_pubkey(__rc_pubkey_set* pubkey, const char* pubkey_filename);
 
 int save_str(char** buffer, signed long int length, const char* filename);
 int __save_str(char** buffer, unsigned long int length, FILE* openFile);
@@ -502,8 +528,10 @@ void __save_1_string(std::string str1, std::ofstream& out);
 int read_sec_para(__sec_setting* para, const char* filename);
 
 int read_prikey(__prikey* prikey, const char* prikey_filename);
+int read_rc_prikey(__rc_prikey* prikey, const char* prikey_filename);
 
 int read_pubkey(__pubkey_set* pubkey, const char* pubkey_filename);
+int read_rc_pubkey(__rc_pubkey_set* pubkey, const char* pubkey_filename);
 
 char** read_str(const char* filename);
 int malloc_buffer_read_file(char*** buffer, FILE* in);
