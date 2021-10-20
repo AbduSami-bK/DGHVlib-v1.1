@@ -240,37 +240,48 @@ char* __read_1_string(std::ifstream& in) {
 	return str;
 }
 
-int save_sec_para(__sec_setting* para, const char* filename) {
-
-	int ret = 0;
-	if(para == NULL || filename == NULL){
+int save_sec_para(__sec_setting* para, const char* filename)
+{
+	if (para == NULL || filename == NULL) {
 		return -1;
 	}
-	char* buffer = (char*)malloc(W*8 * sizeof (char));
-	sprintf(buffer, "lam:%lu\nrho:%lu\nRho:%lu\neta:%lu\ngam:%lu\nTheta:%lu\ntheta:%lu\nn:%lu\ntau:%lu\nprec:%lu",
+
+	int ret = 0;
+
+	char *ptl = (char*) malloc(129 * sizeof(char));	//! W/2 - 129 is a magic number. Since I'm encrypting SHA3-512, which are 128 byte long hashes.
+	mpz_get_str(ptl, 16, para->pt_limit);
+
+	char* buffer = (char*) malloc((W*8 + 141) * sizeof (char));
+	sprintf(buffer, "lam:%lu\nrho:%lu\nRho:%lu\neta:%lu\ngam:%lu\nTheta:%lu\ntheta:%lu\nn:%lu\ntau:%lu\nprec:%lu\npt-limit:%s",
 					para->lam, para->rho, para->Rho, para->eta, para->gam,
-					para->Theta, para->theta, para->n, para->tau, para->prec);
+					para->Theta, para->theta, para->n, para->tau, para->prec, ptl);
+
 	FILE *out;
 	if ((out = fopen(filename,"wt")) == NULL) {
 		fprintf(stderr, "Cannot open security parameter file\n");
 	}
 
 	ret = fprintf(out, "%s\n", buffer);
+	free(ptl);
 	free(buffer);
 	fclose(out);
 	return ret;
 }
 
-int read_sec_para(__sec_setting* para, const char* filename) {
-	int ret = 0;
+int read_sec_para(__sec_setting* para, const char* filename)
+{
 	if (para == NULL || filename == NULL) {
 		return -1;
 	}
-	char* buffer = (char*) malloc(W*8 * sizeof (char));
-	memset(buffer, '\0', W*8 * sizeof (char));
+
+	int ret = 0;
+	char* buffer = (char*) malloc((W*8 + 141) * sizeof (char));
+	memset(buffer, '\0', (W*8 + 141) * sizeof (char));
+	char* ptl = (char*) malloc(139 * sizeof (char));
+	memset(ptl, '\0', 141 * sizeof (char));
 	FILE *in;
-	if ((in = fopen(filename,"r")) == NULL) {
-		fprintf(stderr,"Cannot open security parameter file\n");
+	if ((in = fopen(filename, "r")) == NULL) {
+		fprintf(stderr, "Cannot open security parameter file\n");
 	}
 	int i = 0;
 
@@ -279,10 +290,13 @@ int read_sec_para(__sec_setting* para, const char* filename) {
 		i = strlen(buffer);
 	}
 
-	ret = sscanf(buffer, "lam:%lu\nrho:%lu\nRho:%lu\neta:%lu\ngam:%lu\nTheta:%lu\ntheta:%lu\nn:%lu\ntau:%lu\nprec:%lu",
+	ret = sscanf(buffer, "lam:%lu\nrho:%lu\nRho:%lu\neta:%lu\ngam:%lu\nTheta:%lu\ntheta:%lu\nn:%lu\ntau:%lu\nprec:%lu\npt-limit:%s",
 						&(para->lam), &(para->rho), &(para->Rho), &(para->eta), &(para->gam),
-						&(para->Theta), &(para->theta), &(para->n), &(para->tau), &(para->prec));
+						&(para->Theta), &(para->theta), &(para->n), &(para->tau), &(para->prec), ptl);
 
+	mpz_set_str(para->pt_limit, ptl, 16);
+
+	free(ptl);
 	free(buffer);
 	fclose(in);
 	return ret;

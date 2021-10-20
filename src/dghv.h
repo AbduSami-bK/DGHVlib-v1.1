@@ -70,6 +70,7 @@ typedef struct securitySetting {
     size_t tau;     // The number of public keys
     size_t prec;    // the accuracy after the decimal point of yi
     size_t n;       // bootstrapping takes the n-bit after the decimal point, i.e. the c*yi takes the decimal point after the n-bit participates in the redaction refresh.
+    mpz_t  pt_limit;// Maximum plaintext number than can be encrypted and decrypted.
 } __sec_setting;
 
 // The type of private key
@@ -369,17 +370,18 @@ void DGHV_encrypt(__cit* ciphertext, unsigned long plaintext, __pubkey_set* pubk
  *
  * @param ciphertext Decrypted redaction
  * @param prikey private key
+ * @param pt_limit Largest-Plaintext number. Setting from security settings parameters
  * @return unsigned long
  */
-unsigned long DGHV_decrypt(__cit* ciphertext, __prikey* prikey);
+unsigned long DGHV_decrypt(__cit* ciphertext, __prikey* prikey, mpz_t pt_limit);
 
 void CMNT_encrypt(__cit* ciphertext, unsigned long plaintext, __sc_pubkey_set* pubkey, __sec_setting* para, randstate rs);
 
-unsigned long CMNT_decrypt(__cit* ciphertext, __sc_prikey* prikey);
+unsigned long CMNT_decrypt(__cit* ciphertext, __sc_prikey* prikey, mpz_t pt_limit);
 
 void CNT_encrypt(__cit* ciphertext, unsigned long plaintext, __rc_pubkey_set* pubkey, __sec_setting* para);
 
-unsigned long CNT_decrypt(__cit* ciphertext, __rc_prikey* prikey);
+unsigned long CNT_decrypt(__cit* ciphertext, __rc_prikey* prikey, mpz_t pt_limit);
 
 
 /****************  Squashed Decrypt Circuitry.  ****************/

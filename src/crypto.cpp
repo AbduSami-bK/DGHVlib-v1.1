@@ -12,9 +12,6 @@
 
 #include "dghv.h"
 
-// Maximum unsigned long plaintext + 1. That is, this number is the modulo class for Encryptions and Decryptions
-#define PT_LIMIT    256
-
 void DGHV_encrypt(__cit* ciphertext, unsigned long plaintext, __pubkey_set* pubkey, __sec_setting* para, randstate rs) {
  	mpz_t rn;
  	mpz_init(rn);
@@ -28,20 +25,20 @@ void DGHV_encrypt(__cit* ciphertext, unsigned long plaintext, __pubkey_set* pubk
         } while (r == 0);
  		mpz_add(ciphertext->c, ciphertext->c, pubkey->pks[r]);
  	}
- 	mpz_mul_ui(ciphertext->c, ciphertext->c, PT_LIMIT);
+ 	mpz_mul(ciphertext->c, ciphertext->c, para->pt_limit);
  	mpz_mod(ciphertext->c, ciphertext->c, pubkey->pks[0]);
  	gen_rrandomb(rn, rs, para->Rho);
- 	mpz_mul_ui(rn, rn, PT_LIMIT);
+ 	mpz_mul(rn, rn, para->pt_limit);
  	mpz_add_ui(rn, rn, plaintext);
  	mpz_add(ciphertext->c, ciphertext->c, rn);
  	mpz_clear(rn);
 }
 
-unsigned long DGHV_decrypt(__cit* ciphertext, __prikey* prikey) {
+unsigned long DGHV_decrypt(__cit* ciphertext, __prikey* prikey, mpz_t pt_limit) {
  	mpz_t plaintext;
  	mpz_init(plaintext);
  	mpz_mod(plaintext, ciphertext->c, prikey->sk);
- 	mpz_mod_ui(plaintext, plaintext, PT_LIMIT);
+ 	mpz_mod(plaintext, plaintext, pt_limit);
     unsigned long pl = mpz_get_ui(plaintext);
     mpz_clear(plaintext);
     return pl;
@@ -68,10 +65,10 @@ void CMNT_encrypt(__cit* ciphertext, unsigned long plaintext, __sc_pubkey_set* p
         mpz_add(ciphertext->c, ciphertext->c, pro);
     }
 
-    mpz_mul_ui(ciphertext->c, ciphertext->c, PT_LIMIT);
+    mpz_mul(ciphertext->c, ciphertext->c, para->pt_limit);
     mpz_mod(ciphertext->c, ciphertext->c, pubkey->x0);
 	gen_rrandomb(rn, rs, para->Rho);
-	mpz_mul_ui(rn, rn, PT_LIMIT);
+	mpz_mul(rn, rn, para->pt_limit);
     mpz_add_ui(rn, rn, plaintext);
 	mpz_add(ciphertext->c, ciphertext->c, rn);
 
@@ -79,11 +76,11 @@ void CMNT_encrypt(__cit* ciphertext, unsigned long plaintext, __sc_pubkey_set* p
     mpz_clear(pro);
 }
 
-unsigned long CMNT_decrypt(__cit* ciphertext, __sc_prikey* prikey) {
+unsigned long CMNT_decrypt(__cit* ciphertext, __sc_prikey* prikey, mpz_t pt_limit) {
 	mpz_t plaintext;
 	mpz_init(plaintext);
 	mpz_mod(plaintext, ciphertext->c, prikey->sk);
-	mpz_mod_ui(plaintext, plaintext, PT_LIMIT);
+	mpz_mod(plaintext, plaintext, pt_limit);
     unsigned long pl = mpz_get_ui(plaintext);
     mpz_clear(plaintext);
 	return pl;
@@ -121,10 +118,10 @@ void CNT_encrypt(__cit* ciphertext, unsigned long plaintext, __rc_pubkey_set* pu
         gmp_randclear(rs_pks);
     }
 
-    mpz_mul_ui(pk, pk, PT_LIMIT);
+    mpz_mul(pk, pk, para->pt_limit);
     mpz_mod(pk, pk, pubkey->x0);
     gen_urandomm(rnd, rs_rnd, u_rnd);
-    mpz_mul_ui(rnd, rnd, PT_LIMIT);
+    mpz_mul(rnd, rnd, para->pt_limit);
     mpz_add_ui(rnd, rnd, plaintext);
     mpz_add(ciphertext->c, rnd, pk);
 
@@ -136,11 +133,11 @@ void CNT_encrypt(__cit* ciphertext, unsigned long plaintext, __rc_pubkey_set* pu
     gmp_randclear(rs_rnd);
 }
 
-unsigned long CNT_decrypt(__cit* ciphertext, __rc_prikey* prikey) {
+unsigned long CNT_decrypt(__cit* ciphertext, __rc_prikey* prikey, mpz_t pt_limit) {
     mpz_t plaintext;
     mpz_init(plaintext);
     mpz_mod(plaintext, ciphertext->c, prikey->sk);
-    mpz_mod_ui(plaintext, plaintext, PT_LIMIT);
+    mpz_mod(plaintext, plaintext, pt_limit);
     unsigned long pl = mpz_get_ui(plaintext);
     mpz_clear(plaintext);
     return pl;

@@ -38,7 +38,7 @@ void BitDecomp(unsigned long** c_expand, mpz_t* z, unsigned long length, unsigne
     free(binary_str);
 }
 
- void mod_switch(__cit* newer, __cit* old, __rc_pubkey_set* pubkey, __sec_setting* para){
+ void mod_switch(__cit* newer, __cit* old, __rc_pubkey_set* pubkey, __sec_setting* para){   //! FIXME Need to make compatible with new para->pt_limit setting
 
      unsigned long i, j;
      mpz_t pro, lsb;
