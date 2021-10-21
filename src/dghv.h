@@ -37,7 +37,7 @@
 #define PROB_EXP              50
 #define BASE                  2
 #define PRIHL                 8
-#define PUBHL                 9
+#define PUBHL                 8
 
 #define W                     (GMP_NUMB_BITS/2)
 #define _LSBMASK              1ul

@@ -72,7 +72,7 @@ void set_default_para(__sec_setting* para, int level)
             break;
     }
     para->prec = para->gam + para->eta;
-    mpz_ui_pow_ui(para->pt_limit, 2, 128);
+    mpz_ui_pow_ui(para->pt_limit, 2, 512);  // SHA3-512 is 128 digits long in base 16. 512 = 8 * 128 / 2 (1 byte can have 2 digits)
 }
 
 bool para_valid(__sec_setting* para)

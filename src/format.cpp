@@ -25,7 +25,7 @@ char* format_ciphertext_str(__cit* ciph) {
 }
 
 int format_str_ciphertext(const char* buffer, __cit* ciph) {
-	if(ciph == NULL || buffer == NULL){
+	if (ciph == NULL || buffer == NULL) {
 		return -1;
 	}
 	mpz_set_str(ciph->c, buffer, W/2);
@@ -249,7 +249,7 @@ std::vector<std::string> format_rc_publickey_str(__rc_pubkey_set* pubkey, int *l
 		//sprintf(temp, "%d %d %lu # ", MP_PREC(pubkey->y[t]), MP_SIZE(pubkey->y[t]), MP_EXP(pubkey->y[t]));
 		temp << std::to_string(MP_PREC(pubkey->y[t])) << " "
 			<< std::to_string(MP_SIZE(pubkey->y[t])) << " "
-			<< std::to_string(MP_EXP(pubkey->y[t])) << " ";
+			<< std::to_string(MP_EXP(pubkey->y[t])) << " # ";
 		for (int j = 0; j < MP_SIZE(pubkey->y[t]); ++j) {
 			//sprintf(temp, "%lx ", LIMB(pubkey->y[t], j));
 			temp << std::to_string(LIMB(pubkey->y[t], j)) << " ";
@@ -299,7 +299,7 @@ int format_str_rc_publickey(std::vector<std::string> &buffer, int length, __rc_p
 	for (; i < pubkey->y_size + pubkey->pks_size + 3; ++i) {
 		__mpf_struct* tmp;
 
-		int j = i - pubkey->y_size - pubkey->pks_size - 3;
+		int j = i - pubkey->pks_size - 3;
 		tmp = (__mpf_struct*) malloc(sizeof(__mpf_struct));
 		sscanf(buffer[i].c_str(), "%d %d %lu ", &(tmp->_mp_prec), &(tmp->_mp_size), &(tmp->_mp_exp));
 		tmp->_mp_d = (mp_limb_t*) malloc(tmp->_mp_size * sizeof(mp_limb_t));
@@ -311,7 +311,6 @@ int format_str_rc_publickey(std::vector<std::string> &buffer, int length, __rc_p
 		}
 		mpf_set(pubkey->y[j], tmp);
 		mpf_clear(tmp);
-		free(tmp->_mp_d);	// TODO See if not needed
 		free(tmp);
 	}
 

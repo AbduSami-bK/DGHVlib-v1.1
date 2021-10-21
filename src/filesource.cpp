@@ -635,11 +635,13 @@ int read_rc_pubkey(__rc_pubkey_set* pubkey, const char* pubkey_filename) {
 
 	for (int j = 0; j < buffer_len; ++j) {
 		std::getline(in, base64);
+		if (in.eof())
+			break;
 		ret += base64.length();
-		//buffer[j] = (char*) malloc(buffer_j_len * sizeof (char));
-		//memset(buffer[j], '\0', buffer_j_len * sizeof (char));
-		buffer[j] = std::string(buffer_j_len, '\0');
-		base64_decode(base64.c_str(), base64.length(), buffer[j]);
+		char *buf = (char*) malloc(buffer_j_len * sizeof (char));
+		base64_decode(base64.c_str(), base64.length(), buf);
+		buffer.push_back(buf);
+		free(buf);
 	}
 	format_str_rc_publickey(buffer, buffer_len, pubkey);
 
