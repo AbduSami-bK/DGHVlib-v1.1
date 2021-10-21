@@ -379,9 +379,9 @@ void CMNT_encrypt(__cit* ciphertext, unsigned long plaintext, __sc_pubkey_set* p
 
 unsigned long CMNT_decrypt(__cit* ciphertext, __sc_prikey* prikey, mpz_t pt_limit);
 
-void CNT_encrypt(__cit* ciphertext, unsigned long plaintext, __rc_pubkey_set* pubkey, __sec_setting* para);
+void CNT_encrypt(__cit* ciphertext, mpz_t plaintext, __rc_pubkey_set* pubkey, __sec_setting* para);
 
-unsigned long CNT_decrypt(__cit* ciphertext, __rc_prikey* prikey, mpz_t pt_limit);
+mpz_class CNT_decrypt(__cit* ciphertext, __rc_prikey* prikey, mpz_t pt_limit);
 
 
 /****************  Squashed Decrypt Circuitry.  ****************/

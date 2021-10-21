@@ -86,7 +86,7 @@ unsigned long CMNT_decrypt(__cit* ciphertext, __sc_prikey* prikey, mpz_t pt_limi
 	return pl;
 }
 
-void CNT_encrypt(__cit* ciphertext, unsigned long plaintext, __rc_pubkey_set* pubkey, __sec_setting* para) {
+void CNT_encrypt(__cit* ciphertext, mpz_t plaintext, __rc_pubkey_set* pubkey, __sec_setting* para) {
     randstate rs_rnd;
     mpz_t pk, pki, rnd, u_pks, u_rnd;
 
@@ -122,7 +122,7 @@ void CNT_encrypt(__cit* ciphertext, unsigned long plaintext, __rc_pubkey_set* pu
     mpz_mod(pk, pk, pubkey->x0);
     gen_urandomm(rnd, rs_rnd, u_rnd);
     mpz_mul(rnd, rnd, para->pt_limit);
-    mpz_add_ui(rnd, rnd, plaintext);
+    mpz_add(rnd, rnd, plaintext);
     mpz_add(ciphertext->c, rnd, pk);
 
     mpz_clear(pk);
@@ -133,12 +133,9 @@ void CNT_encrypt(__cit* ciphertext, unsigned long plaintext, __rc_pubkey_set* pu
     gmp_randclear(rs_rnd);
 }
 
-unsigned long CNT_decrypt(__cit* ciphertext, __rc_prikey* prikey, mpz_t pt_limit) {
-    mpz_t plaintext;
-    mpz_init(plaintext);
-    mpz_mod(plaintext, ciphertext->c, prikey->sk);
-    mpz_mod(plaintext, plaintext, pt_limit);
-    unsigned long pl = mpz_get_ui(plaintext);
-    mpz_clear(plaintext);
-    return pl;
+mpz_class CNT_decrypt(__cit* ciphertext, __rc_prikey* prikey, mpz_t pt_limit) {
+    mpz_class plaintext;
+    plaintext = mpz_class(ciphertext->c) % mpz_class(prikey->sk);
+    plaintext %= mpz_class(pt_limit);
+    return plaintext;
 }
