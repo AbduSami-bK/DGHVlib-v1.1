@@ -202,8 +202,8 @@ std::vector<std::string> format_rc_publickey_str(__rc_pubkey_set* pubkey, int *l
 	std::vector<std::string> buffer;
 	unsigned long int i;
 	//int l = pubkey->pk_bit_cnt/W*W + W*W*W;
-	void (*freefunc)(void *, size_t);
-	mp_get_memory_functions (NULL, NULL, &freefunc);
+	//void (*freefunc)(void *, size_t);
+	//mp_get_memory_functions (NULL, NULL, &freefunc);
 
 	// Static sized numbers
 	{
@@ -223,22 +223,22 @@ std::vector<std::string> format_rc_publickey_str(__rc_pubkey_set* pubkey, int *l
 
 	// delta
 	for (i = 1; i < pubkey->pks_size + 1; ++i) {
-		char *temp = mpz_get_str(NULL, W/2, pubkey->delta[i - 1]);
-		buffer.push_back(std::string(temp));
-		freefunc(temp, strlen(temp) + 1);
+		//char *temp = mpz_get_str(NULL, W/2, pubkey->delta[i - 1]);
+		buffer.push_back(mpz_class(pubkey->delta[i - 1]).get_str());
+		//freefunc(temp, strlen(temp) + 1);
 	}
 
 	// x0
 	{
-		char *temp = mpz_get_str(NULL, W/2, pubkey->x0);
-		buffer.push_back(temp);
-		freefunc(temp, strlen(temp) + 1);
+		//char *temp = mpz_get_str(NULL, W/2, pubkey->x0);
+		buffer.push_back(mpz_class(pubkey->x0).get_str());
+		//freefunc(temp, strlen(temp) + 1);
 		++i;
 	}
 	{
-		char *temp = mpz_get_str(NULL, W/2, pubkey->rx0);
-		buffer.push_back(temp);
-		freefunc(temp, strlen(temp) + 1);
+		//char *temp = mpz_get_str(NULL, W/2, pubkey->rx0);
+		buffer.push_back(mpz_class(pubkey->rx0).get_str());
+		//freefunc(temp, strlen(temp) + 1);
 		++i;
 	}
 
@@ -261,9 +261,9 @@ std::vector<std::string> format_rc_publickey_str(__rc_pubkey_set* pubkey, int *l
 	// sigma
 	for (unsigned long t = 0; i < pubkey->sx * pubkey->sy + pubkey->y_size + pubkey->pks_size + 3; ++t) {
 		for (unsigned long j = 0; j < pubkey->sy; ++j, ++i) {
-			char *temp = mpz_get_str(NULL, W/2, pubkey->sigma[t][j]);
-			buffer.push_back(temp);
-			freefunc(temp, strlen(temp) + 1);
+			//char *temp = mpz_get_str(NULL, W/2, pubkey->sigma[t][j]);
+			buffer.push_back(mpz_class(pubkey->sigma[t][j]).get_str());
+			//freefunc(temp, strlen(temp) + 1);
 		}
 	}
 
@@ -288,12 +288,13 @@ int format_str_rc_publickey(std::vector<std::string> &buffer, int length, __rc_p
 
 	// delta
 	for (i = 1; i < pubkey->pks_size + 1; ++i) {
-		mpz_set_str(pubkey->delta[i - 1], buffer[i].c_str(), W/2);
+		//mpz_set_str(pubkey->delta[i - 1], buffer[i].c_str(), W/2);
+		mpz_set(pubkey->delta[i - 1], mpz_class(buffer[i]).get_mpz_t());
 	}
 
 	// x0
-	mpz_set_str(pubkey->x0, buffer[i++].c_str(), W/2);
-	mpz_set_str(pubkey->rx0, buffer[i++].c_str(), W/2);
+	mpz_set(pubkey->x0, mpz_class(buffer[i++]).get_mpz_t());
+	mpz_set(pubkey->rx0, mpz_class(buffer[i++]).get_mpz_t());
 
 	// y
 	for (; i < pubkey->y_size + pubkey->pks_size + 3; ++i) {
@@ -317,7 +318,7 @@ int format_str_rc_publickey(std::vector<std::string> &buffer, int length, __rc_p
 	// sigma
 	for (unsigned long t = 0; i < pubkey->sx * pubkey->sy + pubkey->y_size + pubkey->pks_size + 3; ++t) {
 		for (unsigned long j = 0; j < pubkey->sy; ++j, ++i) {
-			mpz_set_str(pubkey->sigma[t][j], buffer[i].c_str(), W/2);
+			mpz_set(pubkey->sigma[t][j], mpz_class(buffer[i]).get_mpz_t());
 		}
 	}
 

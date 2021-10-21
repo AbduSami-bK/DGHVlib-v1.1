@@ -276,9 +276,9 @@ int read_sec_para(__sec_setting* para, const char* filename)
 
 	int ret = 0;
 	char* buffer = (char*) malloc((W*8 + 141) * sizeof (char));
-	memset(buffer, '\0', (W*8 + 141) * sizeof (char));
+	memset(buffer, '\0', (W*8 + 140) * sizeof (char));
 	char* ptl = (char*) malloc(139 * sizeof (char));
-	memset(ptl, '\0', 141 * sizeof (char));
+	memset(ptl, '\0', 138 * sizeof (char));
 	FILE *in;
 	if ((in = fopen(filename, "r")) == NULL) {
 		fprintf(stderr, "Cannot open security parameter file\n");
