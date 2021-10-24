@@ -210,11 +210,12 @@ std::vector<std::string> format_rc_publickey_str(__rc_pubkey_set* pubkey, int *l
 		//char *temp = (char*) malloc(11 * 6 * sizeof (char));		// 11 = log10(LONG_MAX) + 1 (for the space)
 		//sprintf(temp, "%lu %lu %lu %lu %lu %lu", pubkey->sx, pubkey->sy, pubkey->pks_size, pubkey->y_size, pubkey->pk_bit_cnt, pubkey->seed);
 		std::ostringstream temp;
-		temp << std::to_string(pubkey->sx) << " "
-			<< std::to_string(pubkey->sy) << " "
-			<< std::to_string(pubkey->pks_size) << " "
-			<< std::to_string(pubkey->y_size) << " "
-			<< std::to_string(pubkey->pk_bit_cnt) << " "
+		temp
+//			<< std::to_string(pubkey->sx) << " "
+//			<< std::to_string(pubkey->sy) << " "
+//			<< std::to_string(pubkey->pks_size) << " "
+//			<< std::to_string(pubkey->y_size) << " "
+//			<< std::to_string(pubkey->pk_bit_cnt) << " "
 			<< std::to_string(pubkey->seed);
 		buffer.push_back(temp.str());
 	}
@@ -235,41 +236,41 @@ std::vector<std::string> format_rc_publickey_str(__rc_pubkey_set* pubkey, int *l
 		//freefunc(temp, strlen(temp) + 1);
 		++i;
 	}
-	{
+//	{
 		//char *temp = mpz_get_str(NULL, W/2, pubkey->rx0);
-		buffer.push_back(mpz_class(pubkey->rx0).get_str());
+//		buffer.push_back(mpz_class(pubkey->rx0).get_str());
 		//freefunc(temp, strlen(temp) + 1);
-		++i;
-	}
+//		++i;
+//	}
 
 	// y
-	for (; i < pubkey->y_size + pubkey->pks_size + 3; ++i) {
-		int t = i - (pubkey->pks_size + 3);
-		std::ostringstream temp;	// = (char*) malloc(l * sizeof(char));
+//	for (; i < pubkey->y_size + pubkey->pks_size + 3; ++i) {
+//		int t = i - (pubkey->pks_size + 3);
+//		std::ostringstream temp;	// = (char*) malloc(l * sizeof(char));
 		//sprintf(temp, "%d %d %lu # ", MP_PREC(pubkey->y[t]), MP_SIZE(pubkey->y[t]), MP_EXP(pubkey->y[t]));
-		temp << std::to_string(MP_PREC(pubkey->y[t])) << " "
-			<< std::to_string(MP_SIZE(pubkey->y[t])) << " "
-			<< std::to_string(MP_EXP(pubkey->y[t])) << " # ";
-		for (int j = 0; j < MP_SIZE(pubkey->y[t]); ++j) {
+//		temp << std::to_string(MP_PREC(pubkey->y[t])) << " "
+//			<< std::to_string(MP_SIZE(pubkey->y[t])) << " "
+//			<< std::to_string(MP_EXP(pubkey->y[t])) << " # ";
+//		for (int j = 0; j < MP_SIZE(pubkey->y[t]); ++j) {
 			//sprintf(temp, "%lx ", LIMB(pubkey->y[t], j));
-			temp << std::to_string(LIMB(pubkey->y[t], j)) << " ";
-		}
-		buffer.push_back(temp.str());
+//			temp << std::to_string(LIMB(pubkey->y[t], j)) << " ";
+//		}
+//		buffer.push_back(temp.str());
 		//free(temp);
-	}
+//	}
 
 	// sigma
-	for (unsigned long t = 0; i < pubkey->sx * pubkey->sy + pubkey->y_size + pubkey->pks_size + 3; ++t) {
-		for (unsigned long j = 0; j < pubkey->sy; ++j, ++i) {
+//	for (unsigned long t = 0; i < pubkey->sx * pubkey->sy + pubkey->y_size + pubkey->pks_size + 3; ++t) {
+//		for (unsigned long j = 0; j < pubkey->sy; ++j, ++i) {
 			//char *temp = mpz_get_str(NULL, W/2, pubkey->sigma[t][j]);
-			buffer.push_back(mpz_class(pubkey->sigma[t][j]).get_str());
+//			buffer.push_back(mpz_class(pubkey->sigma[t][j]).get_str());
 			//freefunc(temp, strlen(temp) + 1);
-		}
-	}
+//		}
+//	}
 
 	// gen_time
 	//buffer[i] = (char*) malloc(20 * sizeof(char));
-	buffer.push_back(pubkey->gen_time);
+//	buffer.push_back(pubkey->gen_time);
 
 	*length = ++i;
 	return buffer;
@@ -284,7 +285,8 @@ int format_str_rc_publickey(std::vector<std::string> &buffer, int length, __rc_p
 	unsigned long int i;
 
 	// Static sized members
-	sscanf(buffer[0].c_str(), "%lu %lu %lu %lu %lu %lu", &(pubkey->sx), &(pubkey->sy), &(pubkey->pks_size), &(pubkey->y_size), &(pubkey->pk_bit_cnt), &(pubkey->seed));
+//	sscanf(buffer[0].c_str(), "%lu %lu %lu %lu %lu %lu", &(pubkey->sx), &(pubkey->sy), &(pubkey->pks_size), &(pubkey->y_size), &(pubkey->pk_bit_cnt), &(pubkey->seed));
+	pubkey->seed = stoul(buffer[0]);
 
 	// delta
 	for (i = 1; i < pubkey->pks_size + 1; ++i) {
@@ -294,35 +296,35 @@ int format_str_rc_publickey(std::vector<std::string> &buffer, int length, __rc_p
 
 	// x0
 	mpz_set(pubkey->x0, mpz_class(buffer[i++]).get_mpz_t());
-	mpz_set(pubkey->rx0, mpz_class(buffer[i++]).get_mpz_t());
+//	mpz_set_str(pubkey->rx0, buffer[i++].c_str(), W/2);
 
 	// y
-	for (; i < pubkey->y_size + pubkey->pks_size + 3; ++i) {
-		__mpf_struct* tmp;
+//	for (; i < pubkey->y_size + pubkey->pks_size + 3; ++i) {
+//		__mpf_struct* tmp;
 
-		int j = i - pubkey->pks_size - 3;
-		tmp = (__mpf_struct*) malloc(sizeof(__mpf_struct));
-		sscanf(buffer[i].c_str(), "%d %d %lu ", &(tmp->_mp_prec), &(tmp->_mp_size), &(tmp->_mp_exp));
-		tmp->_mp_d = (mp_limb_t*) malloc(tmp->_mp_size * sizeof(mp_limb_t));
+//		int j = i - pubkey->pks_size - 3;
+//		tmp = (__mpf_struct*) malloc(sizeof(__mpf_struct));
+//		sscanf(buffer[i].c_str(), "%d %d %lu ", &(tmp->_mp_prec), &(tmp->_mp_size), &(tmp->_mp_exp));
+//		tmp->_mp_d = (mp_limb_t*) malloc(tmp->_mp_size * sizeof(mp_limb_t));
 
-		const char* buf = strchr(buffer[i].c_str(), '#');
-		for (int k = 0; k < tmp->_mp_size; ++k) {
-			buf = strchr(buf, ' ') + 1;
-			sscanf(buf, "%lx", &tmp->_mp_d[k]);
-		}
-		mpf_set(pubkey->y[j], tmp);
-		mpf_clear(tmp);
-		free(tmp);
-	}
+//		const char* buf = strchr(buffer[i].c_str(), '#');
+//		for (int k = 0; k < tmp->_mp_size; ++k) {
+//			buf = strchr(buf, ' ') + 1;
+//			sscanf(buf, "%lx", &tmp->_mp_d[k]);
+//		}
+//		mpf_set(pubkey->y[j], tmp);
+//		mpf_clear(tmp);
+//		free(tmp);
+//	}
 
 	// sigma
-	for (unsigned long t = 0; i < pubkey->sx * pubkey->sy + pubkey->y_size + pubkey->pks_size + 3; ++t) {
-		for (unsigned long j = 0; j < pubkey->sy; ++j, ++i) {
-			mpz_set(pubkey->sigma[t][j], mpz_class(buffer[i]).get_mpz_t());
-		}
-	}
+//	for (unsigned long t = 0; i < pubkey->sx * pubkey->sy + pubkey->y_size + pubkey->pks_size + 3; ++t) {
+//		for (unsigned long j = 0; j < pubkey->sy; ++j, ++i) {
+//			mpz_set_str(pubkey->sigma[t][j], buffer[i].c_str(), W/2);
+//		}
+//	}
 
 	// gen_time
-	strcpy(pubkey->gen_time, buffer[i].c_str());
+//	strcpy(pubkey->gen_time, buffer[i].c_str());
 	return 0;
 }
