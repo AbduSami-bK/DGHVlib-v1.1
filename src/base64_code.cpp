@@ -125,7 +125,7 @@ int base64_encode(const char *in, int inlen, char *out) {
 
 std::string base64_encode(std::istream &in) {
     char  temp[3];
-    int i, outlen, inlen = 0;
+    int outlen, inlen = 0;
 
     std::ostringstream out;
 

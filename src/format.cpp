@@ -355,7 +355,6 @@ int write_rc_publickey(__rc_pubkey_set* pubkey, std::ostream &out) {
 
 	// x0
 	out << pubkey->x0 << "\n";
-	std::cout << pubkey->x0;
 //	out << pubkey->rx0 << "\n";
 //	length += 2;
 
@@ -405,7 +404,6 @@ int read_rc_publickey(__rc_pubkey_set* pubkey, std::istream &in) {
 
 	// x0
 	in >> pubkey->x0;
-	std::cout << pubkey->x0;
 //	in >> pubkey->rx0;
 
 	// y
