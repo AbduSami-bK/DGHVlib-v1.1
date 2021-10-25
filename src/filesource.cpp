@@ -84,7 +84,7 @@ int save_str(char** buffer, signed long length, const char* filename) {
 	FILE* out;
 	if ((out = fopen(filename, "wt")) == NULL) {
 		fprintf(stderr, "Cannot open file %s\n", filename);
-		return -1;
+		exit(EXIT_FAILURE);
 	}
 
 	int ret = __save_str(buffer, length, out);
@@ -116,7 +116,7 @@ void save_string(std::string* buffer, long length, const char* filename) {
 	std::ofstream out(filename);
 	if (!out.is_open()) {
 		fprintf(stderr, "Cannot open file %s\n", filename);
-		return;
+		exit(EXIT_FAILURE);
 	}
 
 	__save_string(buffer, length, out);
@@ -144,7 +144,7 @@ char** read_str(const char* filename) {
 	FILE* in;
 	if((in = fopen(filename, "r")) == NULL) {
 		fprintf(stderr, "Cannot open %s file\n", filename);
-		return NULL;
+		exit(EXIT_FAILURE);
 	}
 
 	char** buffer = NULL;
@@ -195,7 +195,7 @@ char** read_string(const char* filename) {
 	std::ifstream in(filename);
 	if(!in.is_open()) {
 		fprintf(stderr, "Cannot open %s file\n", filename);
-		return NULL;
+		exit(EXIT_FAILURE);
 	}
 
 	char **buffer = NULL;
@@ -259,6 +259,7 @@ int save_sec_para(__sec_setting* para, const char* filename)
 	FILE *out;
 	if ((out = fopen(filename,"wt")) == NULL) {
 		fprintf(stderr, "Cannot open security parameter file\n");
+		exit(EXIT_FAILURE);
 	}
 
 	ret = fprintf(out, "%s\n", buffer);
@@ -282,6 +283,7 @@ int read_sec_para(__sec_setting* para, const char* filename)
 	FILE *in;
 	if ((in = fopen(filename, "r")) == NULL) {
 		fprintf(stderr, "Cannot open security parameter file\n");
+		exit(EXIT_FAILURE);
 	}
 	int i = 0;
 
@@ -323,6 +325,7 @@ int save_prikey(__prikey* prikey, const char* prikey_filename) {
 
 	if((out = fopen(prikey_filename,"wt")) == NULL){
 		fprintf(stderr,"Cannot open privatekey file\n");
+		exit(EXIT_FAILURE);
 	}
 
 	fprintf(out, "%s\n", s1);
@@ -358,6 +361,7 @@ int read_prikey(__prikey* prikey, const char* prikey_filename) {
 
 	if((in = fopen(prikey_filename,"r"))== NULL){
 		fprintf(stderr,"Cannot open privatekey file\n");
+		exit(EXIT_FAILURE);
 	}
 
 	while (!feof(in)) {
@@ -412,6 +416,7 @@ int read_prikey(__prikey* prikey, const char* prikey_filename) {
 	 FILE *out;
 	 if((out = fopen(pubkey_filename,"wt"))== NULL){
 			fprintf(stderr,"Cannot open publickey file\n");
+			exit(EXIT_FAILURE);
 	 }
 
 	 fprintf(out, "%s\n", s1);
@@ -452,6 +457,7 @@ int read_prikey(__prikey* prikey, const char* prikey_filename) {
 	 FILE* in;
 	 if((in = fopen(pubkey_filename,"r"))== NULL){
 			fprintf(stderr,"Cannot open publickey file\n");
+			exit(EXIT_FAILURE);
 	 }
 
 	 while(!feof(in)){
@@ -497,7 +503,7 @@ int save_rc_prikey(__rc_prikey* prikey, const char* prikey_filename) {
 
 	if (!out.is_open()) {
 		fprintf(stderr, "Cannot open privatekey file\n");
-		return -2;
+		exit(EXIT_FAILURE);
 	}
 
 	out << "---- BEGIN FHE PRIVATE KEY ----\n";
@@ -533,11 +539,12 @@ int read_rc_prikey(__rc_prikey* prikey, const char* prikey_filename) {
 
 	if (!in.is_open()) {
 		fprintf(stderr, "Cannot open privatekey file\n");
+		exit(EXIT_FAILURE);
 	}
 
 	for (int i = 0; i < PRIHL; ++i) {
 		std::getline(in, header);
-		if (header.substr(0, 5).compare("Lines") == 0) {	// TODO test
+		if (header.substr(0, 5).compare("Lines") == 0) {
 			length = std::stoi(header.substr(7));
 			break;
 		}
@@ -588,6 +595,7 @@ int save_rc_pubkey(__rc_pubkey_set* pubkey, const char* pubkey_filename) {
 	std::ofstream out(pubkey_filename);
 	if (!out.is_open()) {
 		fprintf(stderr, "Cannot open publickey file\n");
+		exit(EXIT_FAILURE);
 	}
 
 	out << "---- BEGIN FHE PUBLIC KEY ----\n";
@@ -618,12 +626,16 @@ int read_rc_pubkey(__rc_pubkey_set* pubkey, const char* pubkey_filename) {
 	std::ifstream in(pubkey_filename);
 	if (!in.is_open()) {
 		fprintf(stderr, "Cannot open publickey file\n");
-		return -1;
+		exit(EXIT_FAILURE);
 	}
 
 	std::string header;	// = (char* ) malloc(W * 10     * sizeof (char));
 	for (int i = 0; i < PUBHL; ++i) {
 		std::getline(in, header);
+		if (header.substr(0, 5).compare("Lines") == 0) {
+			length = std::stoi(header.substr(7));
+			break;
+		}
 	}
 
 	int ret = 0;
@@ -675,7 +687,7 @@ int save_rc_pubkey(__rc_pubkey_set* pubkey, const char* pubkey_filename) {
 	std::ofstream out(pubkey_filename);
 	if (!out.is_open()) {
 		fprintf(stderr, "Cannot open publickey file\n");
-		return -1;
+		exit(EXIT_FAILURE);
 	}
 
 	out << "---- BEGIN FHE PUBLIC KEY ----\n";
@@ -700,12 +712,16 @@ int read_rc_pubkey(__rc_pubkey_set* pubkey, const char* pubkey_filename) {
 	std::ifstream in(pubkey_filename);
 	if (!in.is_open()) {
 		fprintf(stderr, "Cannot open publickey file\n");
-		return -1;
+		exit(EXIT_FAILURE);
 	}
 
 	std::string header;
 	for (int i = 0; i < PUBHL; ++i) {
 		std::getline(in, header);
+		/*if (header.substr(0, 5).compare("Lines") == 0) {
+			int length = std::stoi(header.substr(7));
+			break;
+		}*/
 	}
 
 	int ret = 0;
