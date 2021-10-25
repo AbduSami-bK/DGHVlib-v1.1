@@ -67,7 +67,7 @@ void gen_rc_pubkey(__rc_pubkey_set* pubkey, __rc_prikey* prikey, __sec_setting* 
     if (mpz_odd_p(q) == 0) {
         gen_urandomm(q, rs_rnd, q);
     }
-    mpz_mul(pubkey->x0, q, prikey->sk);
+    pubkey->x0 = mpz_class(q) * mpz_class(prikey->sk);
 
     time_t t;
     struct tm *lt;

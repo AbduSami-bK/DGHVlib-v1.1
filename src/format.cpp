@@ -13,6 +13,7 @@
 
 #include "dghv.h"
 #include <sstream>
+#include <iostream>
 
 char* format_ciphertext_str(__cit* ciph) {
 	if (ciph == NULL) {
@@ -270,7 +271,7 @@ std::vector<std::string> format_rc_publickey_str(__rc_pubkey_set* pubkey, int *l
 
 	// gen_time
 	//buffer[i] = (char*) malloc(20 * sizeof(char));
-//	buffer.push_back(pubkey->gen_time);
+	buffer.push_back(pubkey->gen_time);
 
 	*length = ++i;
 	return buffer;
@@ -290,12 +291,12 @@ int format_str_rc_publickey(std::vector<std::string> &buffer, int length, __rc_p
 
 	// delta
 	for (i = 1; i < pubkey->pks_size + 1; ++i) {
-		//mpz_set_str(pubkey->delta[i - 1], buffer[i].c_str(), W/2);
-		mpz_set(pubkey->delta[i - 1], mpz_class(buffer[i]).get_mpz_t());
+		mpz_set_str(pubkey->delta[i - 1], buffer[i].c_str(), W/2);
+		//mpz_set(pubkey->delta[i - 1], mpz_class(buffer[i], 10).get_mpz_t());
 	}
 
 	// x0
-	mpz_set(pubkey->x0, mpz_class(buffer[i++]).get_mpz_t());
+	pubkey->x0 = buffer[i++];
 //	mpz_set_str(pubkey->rx0, buffer[i++].c_str(), W/2);
 
 	// y
@@ -325,6 +326,111 @@ int format_str_rc_publickey(std::vector<std::string> &buffer, int length, __rc_p
 //	}
 
 	// gen_time
-//	strcpy(pubkey->gen_time, buffer[i].c_str());
+	strcpy(pubkey->gen_time, buffer[i].c_str());
+	return 0;
+}
+
+
+int write_rc_publickey(__rc_pubkey_set* pubkey, std::ostream &out) {
+	if (pubkey == NULL) {
+		return -1;
+	}
+
+	int length = 0;
+
+	// Static sized numbers
+	out
+//		<< pubkey->sx << " " << pubkey->sy << " "
+//		<< pubkey->pks_size << " " << pubkey->y_size << " "
+//		<< pubkey->pk_bit_cnt << " "
+	<< pubkey->seed << "\n";
+	++length;
+
+	// delta
+	for (unsigned long i = 0; i < pubkey->pks_size; ++i) {
+		out << pubkey->delta[i] << " ";
+	}
+	out << "\n";
+	++length;
+
+	// x0
+	out << pubkey->x0 << "\n";
+	std::cout << pubkey->x0;
+//	out << pubkey->rx0 << "\n";
+//	length += 2;
+
+	// y
+//	for (unsigned long i = 0; i < pubkey->y_size; ++i) {
+//		out << std::to_string(MP_PREC(pubkey->y[i])) << " "
+//			<< std::to_string(MP_SIZE(pubkey->y[i])) << " "
+//			<< std::to_string(MP_EXP(pubkey->y[i])) << " # ";
+//		for (int j = 0; j < MP_SIZE(pubkey->y[i]); ++j) {
+//			out << std::to_string(LIMB(pubkey->y[i], j)) << " ";
+//		}
+//		out << "\n";
+//		++length;
+//	}
+
+	// sigma
+//	for (unsigned long i = 0; i < pubkey->sx; ++i) {
+//		for (unsigned long j = 0; j < pubkey->sy; ++j) {
+//			out << pubkey->sigma[i][j] << " ";
+//		}
+//		out << "\n";
+//		++length;
+//	}
+
+	// gen_time
+//	out << pubkey->gen_time << "\n";
+
+	return ++length;
+}
+
+int read_rc_publickey(__rc_pubkey_set* pubkey, std::istream &in) {
+	if (pubkey == NULL) {
+		return -1;
+	}
+
+	// Static sized members
+	in
+//		>> pubkey->sx >> pubkey->sy
+//		>> pubkey->pks_size >> pubkey->y_size
+//		>> pubkey->pk_bit_cnt
+	>> pubkey->seed;
+
+	// delta
+	for (unsigned i = 0; i < pubkey->pks_size; ++i) {
+		in >> pubkey->delta[i];
+	}
+
+	// x0
+	in >> pubkey->x0;
+	std::cout << pubkey->x0;
+//	in >> pubkey->rx0;
+
+	// y
+//	for (unsigned long i = 0; i < pubkey->y_size; ++i) {
+//		in >> pubkey->y[i]->_mp_prec
+//			>> pubkey->y[i]->_mp_size
+//			>> pubkey->y[i]->_mp_exp;
+
+//		char discard;
+//		in >> discard;	// '#'
+//		for (int k = 0; k < pubkey->y[i]->_mp_size; ++k) {
+//			in >> pubkey->y[i]->_mp_d[k];
+//		}
+//	}
+
+	// sigma
+//	for (unsigned long i = 0; i < pubkey->sx; ++i) {
+//		for (unsigned long j = 0; j < pubkey->sy; ++j) {
+//			in >> pubkey->sigma[i][j];
+//		}
+//	}
+
+	// gen_time
+//	std::string buffer;
+//	std::getline(in, buffer);
+//	strcpy(pubkey->gen_time, buffer.c_str());
 	return 0;
 }

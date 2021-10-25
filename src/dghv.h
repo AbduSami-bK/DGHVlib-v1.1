@@ -143,7 +143,7 @@ typedef struct rc_privatekey {
 } __rc_prikey;
 
 typedef struct rc_publickey_set {
-    mpz_t x0;
+    mpz_class x0;
     mpz_t rx0;
     mpz_t* delta;
     mpf_t* y;
@@ -483,11 +483,12 @@ void mod_switch(__cit* newer, __cit* older, __rc_pubkey_set* pubkey, __sec_setti
 
 //int base64_encode(char *indata, int inlen, char *outdata, int *outlen);
 int base64_encode(const char *in, int inlen, char *out);
+std::string base64_encode(std::istream &in);
 
 //int base64_decode(char *indata, int inlen, char *outdata, int *outlen);
 int base64_decode(const char *in, int inlen, char *out);
 int base64_decode(const char *in, std::size_t inlen, std::string &out);
-
+std::string base64_decode(std::istringstream &in);
 
 /****************  Format Ciphertext & Key Convert into String.  ****************/
 
@@ -497,6 +498,7 @@ int format_privatekey_str(__prikey* prikey, char **buffer, int *length);
 int format_rc_privatekey_str(__rc_prikey* prikey, char **buffer, int *length);
 
 int format_publickey_str(__pubkey_set *pubkey, char **buffer, int *length);
+int read_rc_publickey(__rc_pubkey_set* pubkey, std::istream &in);
 std::vector<std::string> format_rc_publickey_str(__rc_pubkey_set *pubkey, int *length);
 
 
@@ -509,6 +511,7 @@ int format_str_rc_privatekey(char** buffer, int length, __rc_prikey* prikey);
 
 int format_str_publickey(char **buffer, int length, __pubkey_set *pubkey);
 int format_str_rc_publickey(std::vector<std::string> &buffer, int length, __rc_pubkey_set *pubkey);
+int write_rc_publickey(__rc_pubkey_set* pubkey, std::ostream &out);
 
 
 /****************  Read & Write Key.  ****************/

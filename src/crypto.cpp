@@ -119,7 +119,7 @@ void CNT_encrypt(__cit* ciphertext, mpz_t plaintext, __rc_pubkey_set* pubkey, __
     }
 
     mpz_mul(pk, pk, para->pt_limit);
-    mpz_mod(pk, pk, pubkey->x0);
+    mpz_mod(pk, pk, pubkey->x0.get_mpz_t());
     gen_urandomm(rnd, rs_rnd, u_rnd);
     mpz_mul(rnd, rnd, para->pt_limit);
     mpz_add(rnd, rnd, plaintext);

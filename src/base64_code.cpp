@@ -16,7 +16,7 @@
  */
 
 #include "dghv.h"
-
+#include <sstream>
 
 static char base64_table[] = {
      'A','B','C','D','E','F','G','H','I','J',
@@ -29,6 +29,20 @@ static char base64_table[] = {
 };
 
 int static base64_map(char *in_block, int len) {
+    for (int i = 0; i < len; ++i) {
+        in_block[i] = base64_table[int (in_block[i])];
+    }
+    if (len % 4 == 3) {
+        in_block[len++] = '=';
+    } else if (len % 4 == 2) {
+        in_block[len] = in_block[len + 1] = '=';
+        len += 2;
+    }
+
+    return len;
+}
+
+int static base64_map(std::string &in_block, int len) {
     for (int i = 0; i < len; ++i) {
         in_block[i] = base64_table[int (in_block[i])];
     }
@@ -109,6 +123,28 @@ int base64_encode(const char *in, int inlen, char *out) {
     return outlen;
 }
 
+std::string base64_encode(std::istream &in) {
+    char  temp[3];
+    int i, outlen, inlen = 0;
+
+    std::ostringstream out;
+
+    while (in.get(temp, 3)) {
+        out << ((temp[0] >> 2) & 0x3f);
+        out << (((temp[0] << 4) & 0x30) | ((temp[1] >> 4) & 0x0f));
+        out << (((temp[1] << 2) & 0x3c) | ((temp[2] >> 6) & 0x03));
+        out << ((temp[2]) & 0x3f);
+        inlen += in.gcount();
+    }
+
+    std::string output = out.str();
+
+    outlen = base64_map(output, ((++inlen * 4) - 1) / 3 + 1);
+    output[outlen] = '\0';
+
+    return output;
+}
+
 int base64_decode(const char *in, int inlen, char *out) {
     const char* in_block;
     char* out_block;
@@ -169,4 +205,31 @@ int base64_decode(const char *in, std::size_t inlen, std::string &out) {
     }
 
     return out.length();
+}
+
+std::string base64_decode(std::istringstream &in) {
+    char  temp[4];
+    int i, outlen, inlen = 0;
+
+    std::ostringstream out;
+
+    for (i = 0; i < inlen; i += 4) {
+        char c;
+        in.get(c);
+        if (c == '=') {
+            return out.str();
+        }
+
+        in.get(temp, 4);
+        base64_unmap(temp);
+
+        out << (((temp[0]<<2) & 0xfc) | ((temp[1]>>4) & 3));
+        out << (((temp[1]<<4) & 0xf0) | ((temp[2]>>2) & 0xf));
+        out << (((temp[2]<<6) & 0xc0) | ((temp[3]   ) & 0x3f));
+
+        outlen += 3;
+        inlen += 4;
+    }
+
+    return out.str();
 }
