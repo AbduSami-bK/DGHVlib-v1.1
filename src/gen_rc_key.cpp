@@ -17,17 +17,14 @@ void gen_rc_prikey(__rc_prikey* prikey, randstate rs) {
     gen_prime(prikey->rsk, prikey->rsk_bit_cnt, rs);
     randomize_ss(prikey->sk_rsub, prikey->rsub_hw, prikey->rsub_size);
 
-    time_t t;
-    struct tm *lt;
-    t = time(NULL);
-    lt = localtime(&t);
-    strftime(prikey->gen_time, 20, "%Y-%m-%d %H:%M:%S", lt);
+    time_t t = time(NULL);
+    strftime(prikey->gen_time, 20, "%Y-%m-%d %H:%M:%S", localtime(&t));
 }
 
 void gen_rc_pubkey(__rc_pubkey_set* pubkey, __rc_prikey* prikey, __sec_setting* para) {
 
-    mpz_t kai, ksi, rnd, q;
-    mpz_t u_kai, u_ksi, u_rnd;
+    mpz_t kai, ksi, rnd, q,
+        u_kai, u_ksi, u_rnd;
     randstate rs_kai, rs_ksi, rs_rnd;
 
     mpz_init(q);
@@ -37,6 +34,7 @@ void gen_rc_pubkey(__rc_pubkey_set* pubkey, __rc_prikey* prikey, __sec_setting* 
     mpz_init(u_kai);
     mpz_init(u_ksi);
     mpz_init(u_rnd);
+
 
     pubkey->seed = get_seed();
     set_randstate(rs_kai, pubkey->seed);
@@ -83,8 +81,6 @@ void gen_rc_pubkey(__rc_pubkey_set* pubkey, __rc_prikey* prikey, __sec_setting* 
     mpz_clear(u_kai);
     mpz_clear(u_ksi);
     mpz_clear(u_rnd);
-
-
 }
 
 void randomize_rsk(mpz_t* yy, mpz_t p, size_t rsk_bit_cnt, size_t ss_hw, size_t prec) {
@@ -144,7 +140,6 @@ void randomize_rsk(mpz_t* yy, mpz_t p, size_t rsk_bit_cnt, size_t ss_hw, size_t 
     mpf_clear(pf);
     mpf_clear(uf);
     mpf_clear(ba);
-
 }
 
 void expand_rc_p2y(__rc_pubkey_set* pubkey, __rc_prikey* prikey, size_t prec, randstate rs) {
