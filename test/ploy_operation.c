@@ -5,8 +5,7 @@
 
 
 
-int main()
-{
+int main(){
     int i;
     clock_t start,finish;
 
