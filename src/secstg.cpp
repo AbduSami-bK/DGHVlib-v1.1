@@ -23,6 +23,14 @@ void init_sec_para(__sec_setting** para)
     mpz_init((*para)->pt_limit);
 }
 
+void clear_sec_para(__sec_setting** para)
+{
+    if (*para != NULL) {
+        mpz_clear((*para)->pt_limit);
+        free(*para);
+    }
+}
+
 void set_default_para(__sec_setting* para, int level)
 {
     switch(level) {

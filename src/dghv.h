@@ -143,7 +143,7 @@ typedef struct rc_privatekey {
 } __rc_prikey;
 
 typedef struct rc_publickey_set {
-    mpz_class x0;
+    mpz_t x0;
     mpz_t rx0;
     mpz_t* delta;
     mpf_t* y;
@@ -196,6 +196,8 @@ typedef __cit*           c_cit;         //The type of redacted pointer
 
 //Initialize the parameters
 void init_sec_para(__sec_setting** para);
+
+void clear_sec_para(__sec_setting** para);
 
 //Initialize the default parameters TOY, SMALL, MEDIUM, LARGE four levels you can set yourself specific parameters in the secstg.c
 void set_default_para(__sec_setting* para, int level);

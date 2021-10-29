@@ -33,6 +33,7 @@ void init_rc_pkset(__rc_pubkey_set** pubkey, __sec_setting* para)
     unsigned long i;
     *pubkey = (__rc_pubkey_set*) malloc(sizeof (__rc_pubkey_set));
 
+    mpz_init((*pubkey)->x0);
     mpz_init((*pubkey)->rx0);
     (*pubkey)->delta = (mpz_t*) malloc(sizeof (mpz_t) * para->tau);
     for (i = 0; i < para->tau; i++) {
@@ -74,6 +75,7 @@ void clear_rc_sk(__rc_prikey* prikey)
 void clear_rc_pkset(__rc_pubkey_set* pubkey)
 {
     unsigned long i;
+    mpz_clear(pubkey->x0);
     mpz_clear(pubkey->rx0);
     for (i = 0; i < pubkey->pks_size; i++) {
         mpz_clear(pubkey->delta[i]);

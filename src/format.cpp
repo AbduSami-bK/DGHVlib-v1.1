@@ -296,7 +296,9 @@ int format_str_rc_publickey(std::vector<std::string> &buffer, int length, __rc_p
 	}
 
 	// x0
-	pubkey->x0 = buffer[i++];
+	//pubkey->x0 = buffer[i++];
+	//mpz_set(pubkey->x0, mpz_class(buffer[i++]).get_mpz_t());
+	mpz_set_str(pubkey->x0, buffer[i++].c_str(), W/2);
 //	mpz_set_str(pubkey->rx0, buffer[i++].c_str(), W/2);
 
 	// y
