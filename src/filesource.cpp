@@ -577,7 +577,7 @@ int save_rc_pubkey(__rc_pubkey_set* pubkey, const char* pubkey_filename) {
 
 	std::stringstream buffer;
 	int length = write_rc_publickey(pubkey, buffer);
-	char* header = (char*) malloc(W*10 * sizeof (char));
+	char* header = (char*) malloc(W * 10 * sizeof (char));
 	gen_rc_pubkey_header(pubkey, header, length);
 
 	std::ofstream out(pubkey_filename);
@@ -586,15 +586,21 @@ int save_rc_pubkey(__rc_pubkey_set* pubkey, const char* pubkey_filename) {
 		exit(EXIT_FAILURE);
 	}
 
-	out << "---- BEGIN FHE PUBLIC KEY ----\n";
-	out << header << "\n";
+	out << "---- BEGIN FHE PUBLIC KEY ----\n"
+		<< header << "\n"
+		//<< base64_encode(buffer) << "\n"
+		<< buffer.str() << "\n"
+		<< "---- END FHE PUBLIC KEY ----\n";
 
-	for (unsigned long i = 0; i < length; ++i) {
-		out << base64_encode(buffer);
-		out << "\n";
+	/*std::string buf;
+	while (std::getline(buffer, buf)) {
+		size_t size = buf.length();
+		char* base64 = (char *) malloc(size * sizeof (char));
+		base64_encode(buf.c_str(), size, base64);
+		out << base64 << "\n";
+		free(base64);
 	}
-
-	out << "---- END FHE PUBLIC KEY ----\n";
+	out << "---- END FHE PUBLIC KEY ----\n";*/
 
 	out.close();
 	return 0;
@@ -622,15 +628,22 @@ int read_rc_pubkey(__rc_pubkey_set* pubkey, const char* pubkey_filename) {
 
 	int ret = 0;
 
-	std::string base64;
+	/*std::string base64;
 	std::stringstream buffer;
+	const int buffer_j_len = ((pubkey->pk_bit_cnt/W*W)/4) + W*W*W;
 
 	while (std::getline(in, base64)) {
-		ret += base64.length();
+		char *buf = (char*) malloc(buffer_j_len * sizeof (char));
+		base64_decode(base64.c_str(), base64.length(), buf);
+		buffer << buf;
+		free(buf);
+
+		/*ret += base64.length();
 		std::istringstream buf(base64);
-		buffer << base64_decode(buf);
+		buffer << base64_decode(buf);* /
 	}
-	read_rc_publickey(pubkey, buffer);
+	read_rc_publickey(pubkey, buffer);*/
+	read_rc_publickey(pubkey, in);
 
 	in.close();
 	return ret;
