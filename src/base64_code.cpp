@@ -123,6 +123,34 @@ int base64_encode(const char *in, int inlen, char *out) {
     return outlen;
 }
 
+std::string base64_encode(const char *in, int inlen) {
+    const char* in_block;
+    char  temp[3];
+    int i, outlen;
+    std::ostringstream out;
+
+    in_block = in;
+
+    for (i = 0; i < inlen; i += 3) {
+        memset(temp, 0, 3);
+        memcpy(temp, in_block, i + 3 < inlen ? 3 : inlen - i);
+
+        out << ((temp[0] >> 2) & 0x3f);
+        out << (((temp[0] << 4) & 0x30) | ((temp[1] >> 4) & 0x0f));
+        out << (((temp[1] << 2) & 0x3c) | ((temp[2] >> 6) & 0x03));
+        out << ((temp[2]) & 0x3f);
+
+        in_block += 3;
+    }
+
+    std::string output = out.str();
+
+    outlen = base64_map(output, ((inlen * 4) - 1) / 3 + 1);
+    output[outlen] = '\0';
+
+    return output;
+}
+
 std::string base64_encode(std::istream &in) {
     char  temp[3];
     int outlen, inlen = 0;

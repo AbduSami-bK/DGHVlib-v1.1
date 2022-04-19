@@ -485,6 +485,7 @@ void mod_switch(__cit* newer, __cit* older, __rc_pubkey_set* pubkey, __sec_setti
 
 //int base64_encode(char *indata, int inlen, char *outdata, int *outlen);
 int base64_encode(const char *in, int inlen, char *out);
+std::string base64_encode(const char *in, int inlen);
 std::string base64_encode(std::istream &in);
 
 //int base64_decode(char *indata, int inlen, char *outdata, int *outlen);

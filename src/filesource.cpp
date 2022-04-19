@@ -496,7 +496,7 @@ int save_rc_prikey(__rc_prikey* prikey, const char* prikey_filename) {
 	char** buffer = (char**) malloc(4 * sizeof (char*));
 	char* header = (char*) malloc(W*W * sizeof (char));
 	//char*  base64 = (char*) malloc((prikey->sk_bit_cnt/2) * sizeof (char));
-	char* r_base64 = (char*) malloc((prikey->rsk_bit_cnt/2) * sizeof (char));
+	//char* r_base64 = (char*) malloc((prikey->rsk_bit_cnt/2) * sizeof (char));
 
 	ret += format_rc_privatekey_str(prikey, buffer, &length);
 	ret += gen_rc_prikey_header(prikey, header, length);
@@ -509,12 +509,12 @@ int save_rc_prikey(__rc_prikey* prikey, const char* prikey_filename) {
 	out << "---- BEGIN FHE PRIVATE KEY ----\n";
 	out << header << "\n";
 	for (i = 0; i < length; ++i) {
-		base64_encode(buffer[i], strlen(buffer[i]), r_base64);
+		std::string r_base64 = base64_encode(buffer[i], strlen(buffer[i]));
 		out << r_base64 << "\n";
 	}
 	out << "---- END FHE PRIVATE KEY ----\n";
 	ret += strlen("---- END FHE PRIVATE KEY ----\n");
-	free(r_base64);
+	//free(r_base64);
 	out.close();
 	free(header);
 	for (i = length - 1; i >= 0; --i)
