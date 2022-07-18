@@ -42,20 +42,6 @@ int static base64_map(char *in_block, int len) {
     return len;
 }
 
-int static base64_map(std::string &in_block, int len) {
-    for (int i = 0; i < len; ++i) {
-        in_block[i] = base64_table[int (in_block[i])];
-    }
-    if (len % 4 == 3) {
-        in_block[len++] = '=';
-    } else if (len % 4 == 2) {
-        in_block[len] = in_block[len + 1] = '=';
-        len += 2;
-    }
-
-    return len;
-}
-
 void static base64_unmap(char *in_block) {
     int i;
     char *c;
@@ -124,31 +110,19 @@ int base64_encode(const char *in, int inlen, char *out) {
 }
 
 std::string base64_encode(const char *in, int inlen) {
-    const char* in_block;
-    char  temp[3];
-    int i, outlen;
-    std::ostringstream out;
+    char * output = (char *) malloc((inlen * 4 - 1) / 3 + 1);
 
-    in_block = in;
+    base64_encode(in, inlen, output);
 
-    for (i = 0; i < inlen; i += 3) {
-        memset(temp, 0, 3);
-        memcpy(temp, in_block, i + 3 < inlen ? 3 : inlen - i);
+    std::string out = output;
+    free(output);
 
-        out << ((temp[0] >> 2) & 0x3f);
-        out << (((temp[0] << 4) & 0x30) | ((temp[1] >> 4) & 0x0f));
-        out << (((temp[1] << 2) & 0x3c) | ((temp[2] >> 6) & 0x03));
-        out << ((temp[2]) & 0x3f);
+    return out;
+}
 
-        in_block += 3;
-    }
-
-    std::string output = out.str();
-
-    outlen = base64_map(output, ((inlen * 4) - 1) / 3 + 1);
-    output[outlen] = '\0';
-
-    return output;
+std::string base64_encode(std::string in) {
+    std::istringstream instream(in);
+    return base64_encode(instream);
 }
 
 std::string base64_encode(std::istream &in) {
@@ -156,7 +130,6 @@ std::string base64_encode(std::istream &in) {
     int outlen, inlen = 0;
 
     std::ostringstream out;
-
     while (in.get(temp, 3)) {
         out << ((temp[0] >> 2) & 0x3f);
         out << (((temp[0] << 4) & 0x30) | ((temp[1] >> 4) & 0x0f));
@@ -165,12 +138,17 @@ std::string base64_encode(std::istream &in) {
         inlen += in.gcount();
     }
 
-    std::string output = out.str();
+    std::string tmp = out.str();
+    char * output = (char *) malloc(tmp.length() + 1);
+    strcpy(output, tmp.c_str());
 
     outlen = base64_map(output, ((++inlen * 4) - 1) / 3 + 1);
     output[outlen] = '\0';
 
-    return output;
+    tmp = output;
+    free(output);
+
+    return tmp;
 }
 
 int base64_decode(const char *in, int inlen, char *out) {
@@ -204,35 +182,32 @@ int base64_decode(const char *in, int inlen, char *out) {
     return strlen(out);
 }
 
-int base64_decode(const char *in, std::size_t inlen, std::string &out) {
-    //char* in_block;
-    //char* out_block;
+int base64_decode(const std::string in, std::string &out) {
     char  temp[4];
     unsigned long i;
+    std::size_t out_i = 0;
 
-    //out_block = out;
-    //in_block = in;
-
-    for (i = 0; i < inlen; i += 4) {
-        if (*in == '=') {
-            //out_block = '\0';
+    for (i = 0; i < in.length(); i += 4) {
+        if (in[i] == '=') {
             return 0;
         }
 
-        memcpy(temp, in, 4);
-        //memset(out_block, 0, 3);
+        strcpy(temp, in.substr(i, 4).c_str());
         base64_unmap(temp);
 
-        out[0] = ((temp[0]<<2) & 0xfc) | ((temp[1]>>4) & 3);
-        out[1] = ((temp[1]<<4) & 0xf0) | ((temp[2]>>2) & 0xf);
-        out[2] = ((temp[2]<<6) & 0xc0) | ((temp[3]   ) & 0x3f);
+        out[out_i    ] = ((temp[0]<<2) & 0xfc) | ((temp[1]>>4) & 3);
+        out[out_i + 1] = ((temp[1]<<4) & 0xf0) | ((temp[2]>>2) & 0xf);
+        out[out_i + 2] = ((temp[2]<<6) & 0xc0) | ((temp[3]   ) & 0x3f);
 
-        out += 3;
-        //outlen += 3;
-        in += 4;
+        out_i += 3;
     }
 
     return out.length();
+}
+
+std::string base64_decode(std::string encoded) {
+    std::istringstream instream(encoded);
+    return base64_decode(instream);
 }
 
 std::string base64_decode(std::istringstream &in) {

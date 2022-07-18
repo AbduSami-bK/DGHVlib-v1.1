@@ -70,7 +70,7 @@ typedef struct securitySetting {
     size_t tau;     // The number of public keys
     size_t prec;    // the accuracy after the decimal point of yi
     size_t n;       // bootstrapping takes the n-bit after the decimal point, i.e. the c*yi takes the decimal point after the n-bit participates in the redaction refresh.
-    mpz_t  pt_limit;// Maximum plaintext number than can be encrypted and decrypted.
+    mpz_class pt_limit;// Maximum plaintext number than can be encrypted and decrypted.
 } __sec_setting;
 
 // The type of private key
@@ -142,6 +142,16 @@ typedef struct rc_privatekey {
     char gen_time[20];
 } __rc_prikey;
 
+typedef struct rc_privatekeyPP {
+    mpz_class sk;                   // Private Secret Key
+    mpz_class rsk;
+    std::vector<mpz_class> sk_rsub;
+    size_t rsub_hw;
+    size_t sk_bit_cnt;
+    size_t rsk_bit_cnt;
+    std::string gen_time[20];
+} __rc_prikeyPP;
+
 typedef struct rc_publickey_set {
     mpz_t x0;
     mpz_t rx0;
@@ -157,6 +167,20 @@ typedef struct rc_publickey_set {
     unsigned long seed;
 } __rc_pubkey_set;
 
+typedef struct rc_publickey_setPP {
+    mpz_class x0;
+    mpz_class rx0;
+    mpz_class* delta;
+    mpf_class* y;
+    mpz_class** sigma;
+    size_t sx;
+    size_t sy;
+    size_t pks_size;
+    size_t y_size;
+    size_t pk_bit_cnt;
+    std::string gen_time[20];
+    unsigned long seed;
+} __rc_pubkey_setPP;
 
 // The type of redaction
 typedef struct ciphertext {
@@ -165,6 +189,13 @@ typedef struct ciphertext {
     mpz_t *zt;
     size_t z_size;  // zi's number
 } __cit;   //ciphertext
+
+typedef struct ciphertextPP {
+    mpz_class c;    // ciphertext
+    mpf_class *z;   // Extended redaction z[i]=c[y[i]]
+    mpz_class *zt;
+    size_t z_size;  // z[i]'s number
+} __citpp;  // ciphertext
 
 // Hamming Weight Calculation Table
 typedef struct hamming_weight_table {
@@ -188,7 +219,8 @@ typedef __pubkey_set*    c_pubkeys;     // The type of public key pointer
 typedef __sc_pubkey_set* sc_pubkeys;
 typedef __rc_pubkey_set* rc_pubkeys;
 typedef __sec_setting*   c_parameters;  // The type of argument pointer
-typedef __cit*           c_cit;         //The type of redacted pointer
+typedef __cit*           c_cit;         // The type of redacted pointer
+typedef __citpp*         cpp_cit;
 
 
 /**************** Security Parameters Setting.  ****************/
@@ -375,15 +407,17 @@ void DGHV_encrypt(__cit* ciphertext, unsigned long plaintext, __pubkey_set* pubk
  * @param pt_limit Largest-Plaintext number. Setting from security settings parameters
  * @return unsigned long
  */
-unsigned long DGHV_decrypt(__cit* ciphertext, __prikey* prikey, mpz_t pt_limit);
+unsigned long DGHV_decrypt(__cit* ciphertext, __prikey* prikey, mpz_class pt_limit);
 
 void CMNT_encrypt(__cit* ciphertext, unsigned long plaintext, __sc_pubkey_set* pubkey, __sec_setting* para, randstate rs);
 
-unsigned long CMNT_decrypt(__cit* ciphertext, __sc_prikey* prikey, mpz_t pt_limit);
+unsigned long CMNT_decrypt(__cit* ciphertext, __sc_prikey* prikey, mpz_class pt_limit);
 
 void CNT_encrypt(__cit* ciphertext, mpz_t plaintext, __rc_pubkey_set* pubkey, __sec_setting* para);
+void CNT_encrypt(__citpp* ciphertext, mpz_class plaintext, __rc_pubkey_set* pubkey, __sec_setting* para);
 
-mpz_class CNT_decrypt(__cit* ciphertext, __rc_prikey* prikey, mpz_t pt_limit);
+mpz_class CNT_decrypt(__cit* ciphertext, __rc_prikey* prikey, mpz_class pt_limit);
+mpz_class CNT_decrypt(__citpp* ciphertext, __rc_prikey* prikey, mpz_class pt_limit);
 
 
 /****************  Squashed Decrypt Circuitry.  ****************/
@@ -484,48 +518,61 @@ void mod_switch(__cit* newer, __cit* older, __rc_pubkey_set* pubkey, __sec_setti
 /****************  Base64 Encode & Decode.  ****************/
 
 //int base64_encode(char *indata, int inlen, char *outdata, int *outlen);
-int base64_encode(const char *in, int inlen, char *out);
-std::string base64_encode(const char *in, int inlen);
-std::string base64_encode(std::istream &in);
+int base64_encode(const char *raw, int rawlen, char *encoded);
+std::string base64_encode(const char *raw, int rawlen);
+std::string base64_encode(std::string raw);
+std::string base64_encode(std::istream &raw);
 
 //int base64_decode(char *indata, int inlen, char *outdata, int *outlen);
-int base64_decode(const char *in, int inlen, char *out);
-int base64_decode(const char *in, std::size_t inlen, std::string &out);
-std::string base64_decode(std::istringstream &in);
+int base64_decode(const char *encoded, int encoded_len, char *raw);
+int base64_decode(const std::string encoded, std::string &raw);
+std::string base64_decode(std::string encoded);
+std::string base64_decode(std::istringstream &encoded);
 
 /****************  Format Ciphertext & Key Convert into String.  ****************/
 
 char* format_ciphertext_str(__cit* ciph);
+std::string format_ciphertext_text(__citpp* ciph);
 
 int format_privatekey_str(__prikey* prikey, char **buffer, int *length);
 int format_rc_privatekey_str(__rc_prikey* prikey, char **buffer, int *length);
+std::vector<std::string> format_rc_privatekey_str(__rc_prikey prikey);
 
 int format_publickey_str(__pubkey_set *pubkey, char **buffer, int *length);
-int read_rc_publickey(__rc_pubkey_set* pubkey, std::istream &in);
-std::vector<std::string> format_rc_publickey_str(__rc_pubkey_set *pubkey, int *length);
+// std::vector<std::string> format_rc_publickey_str(__rc_pubkey_set * pubkey, int * length);
+std::vector<std::string> format_rc_publickey_str(__rc_pubkey_set pubkey);
+int write_rc_publickey(__rc_pubkey_set* pubkey, std::ostream &out);
 
+std::ostream& operator<<(std::ostream&, __rc_prikey);
+std::ostream& operator<<(std::ostream&, __rc_pubkey_set);
 
 /****************  Format String Convert into Ciphertext & Key.  ****************/
 
 int format_str_ciphertext(const char* buffer,  __cit* ciph);
 
 int format_str_privatekey(char** buffer, int length, __prikey* prikey);
-int format_str_rc_privatekey(char** buffer, int length, __rc_prikey* prikey);
+int format_str_rc_privatekey(std::vector<std::string>& buffer, __rc_prikey* prikey);
+// __rc_prikey format_str_rc_privatekey(std::vector<std::string> &buffer);
 
 int format_str_publickey(char **buffer, int length, __pubkey_set *pubkey);
-int format_str_rc_publickey(std::vector<std::string> &buffer, int length, __rc_pubkey_set *pubkey);
-int write_rc_publickey(__rc_pubkey_set* pubkey, std::ostream &out);
+int format_str_rc_publickey(std::vector<std::string> &buffer, __rc_pubkey_set* pubkey);
+// __rc_pubkey_set format_str_rc_publickey(std::vector<std::string> &buffer);
+int read_rc_publickey(__rc_pubkey_set* pubkey, std::istream &in);
 
+std::istream& operator>>(std::istream&, __rc_prikey);
+std::istream& operator>>(std::istream&, __rc_pubkey_set);
 
 /****************  Read & Write Key.  ****************/
 
 int save_sec_para(__sec_setting* para, const char* filename);
 
 int save_prikey(__prikey* prikey, const char* prikey_filename);
-int save_rc_prikey(__rc_prikey* prikey, const char* prikey_filename);
+// int save_rc_prikey(__rc_prikey* prikey, const char* prikey_filename);
+int save_rc_prikey(__rc_prikey* prikey, const std::string prikey_filename);
 
 int save_pubkey(__pubkey_set* pubkey, const char* pubkey_filename);
-int save_rc_pubkey(__rc_pubkey_set* pubkey, const char* pubkey_filename);
+// int save_rc_pubkey(__rc_pubkey_set* pubkey, const char* pubkey_filename);
+int save_rc_pubkey(__rc_pubkey_set* pubkey, const std::string pubkey_filename);
 
 int save_str(char** buffer, signed long int length, const char* filename);
 int __save_str(char** buffer, unsigned long int length, FILE* openFile);
@@ -538,17 +585,19 @@ void __save_1_string(std::string str1, std::ofstream& out);
 int read_sec_para(__sec_setting* para, const char* filename);
 
 int read_prikey(__prikey* prikey, const char* prikey_filename);
-int read_rc_prikey(__rc_prikey* prikey, const char* prikey_filename);
+int read_rc_prikey(__rc_prikey* prikey, const std::string prikey_filename);
+// __rc_prikey* read_rc_prikey(const std::string prikey_filename);
 
 int read_pubkey(__pubkey_set* pubkey, const char* pubkey_filename);
-int read_rc_pubkey(__rc_pubkey_set* pubkey, const char* pubkey_filename);
+int read_rc_pubkey(__rc_pubkey_set* pubkey, const std::string pubkey_filename);
+// __rc_pubkey_set* read_rc_pubkey(const std::string pubkey_filename);
 
 char** read_str(const char* filename);
 int malloc_buffer_read_file(char*** buffer, FILE* in);
+unsigned long malloc_buffer_read_file(std::ifstream& in, char ***buffer);
 unsigned int __read_str(FILE* openFile, char*** buffer);
 char* __read_1_str(FILE* openFile);
 char** read_string(const char* filename);
-unsigned long malloc_buffer_read_file(std::ifstream& in, char ***buffer);
 unsigned long __read_string(std::ifstream& openFile, char ***buffer);
 char* __read_1_string(std::ifstream& openFile);
 

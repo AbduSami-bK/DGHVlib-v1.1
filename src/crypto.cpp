@@ -25,20 +25,20 @@ void DGHV_encrypt(__cit* ciphertext, unsigned long plaintext, __pubkey_set* pubk
         } while (r == 0);
  		mpz_add(ciphertext->c, ciphertext->c, pubkey->pks[r]);
  	}
- 	mpz_mul(ciphertext->c, ciphertext->c, para->pt_limit);
+ 	mpz_mul(ciphertext->c, ciphertext->c, para->pt_limit.get_mpz_t());
  	mpz_mod(ciphertext->c, ciphertext->c, pubkey->pks[0]);
  	gen_rrandomb(rn, rs, para->Rho);
- 	mpz_mul(rn, rn, para->pt_limit);
+ 	mpz_mul(rn, rn, para->pt_limit.get_mpz_t());
  	mpz_add_ui(rn, rn, plaintext);
  	mpz_add(ciphertext->c, ciphertext->c, rn);
  	mpz_clear(rn);
 }
 
-unsigned long DGHV_decrypt(__cit* ciphertext, __prikey* prikey, mpz_t pt_limit) {
+unsigned long DGHV_decrypt(__cit* ciphertext, __prikey* prikey, mpz_class pt_limit) {
  	mpz_t plaintext;
  	mpz_init(plaintext);
  	mpz_mod(plaintext, ciphertext->c, prikey->sk);
- 	mpz_mod(plaintext, plaintext, pt_limit);
+ 	mpz_mod(plaintext, plaintext, pt_limit.get_mpz_t());
     unsigned long pl = mpz_get_ui(plaintext);
     mpz_clear(plaintext);
     return pl;
@@ -65,10 +65,10 @@ void CMNT_encrypt(__cit* ciphertext, unsigned long plaintext, __sc_pubkey_set* p
         mpz_add(ciphertext->c, ciphertext->c, pro);
     }
 
-    mpz_mul(ciphertext->c, ciphertext->c, para->pt_limit);
+    mpz_mul(ciphertext->c, ciphertext->c, para->pt_limit.get_mpz_t());
     mpz_mod(ciphertext->c, ciphertext->c, pubkey->x0);
 	gen_rrandomb(rn, rs, para->Rho);
-	mpz_mul(rn, rn, para->pt_limit);
+	mpz_mul(rn, rn, para->pt_limit.get_mpz_t());
     mpz_add_ui(rn, rn, plaintext);
 	mpz_add(ciphertext->c, ciphertext->c, rn);
 
@@ -76,11 +76,11 @@ void CMNT_encrypt(__cit* ciphertext, unsigned long plaintext, __sc_pubkey_set* p
     mpz_clear(pro);
 }
 
-unsigned long CMNT_decrypt(__cit* ciphertext, __sc_prikey* prikey, mpz_t pt_limit) {
+unsigned long CMNT_decrypt(__cit* ciphertext, __sc_prikey* prikey, mpz_class pt_limit) {
 	mpz_t plaintext;
 	mpz_init(plaintext);
 	mpz_mod(plaintext, ciphertext->c, prikey->sk);
-	mpz_mod(plaintext, plaintext, pt_limit);
+	mpz_mod(plaintext, plaintext, pt_limit.get_mpz_t());
     unsigned long pl = mpz_get_ui(plaintext);
     mpz_clear(plaintext);
 	return pl;
@@ -118,10 +118,10 @@ void CNT_encrypt(__cit* ciphertext, mpz_t plaintext, __rc_pubkey_set* pubkey, __
         gmp_randclear(rs_pks);
     }
 
-    mpz_mul(pk, pk, para->pt_limit);
+    mpz_mul(pk, pk, para->pt_limit.get_mpz_t());
     mpz_mod(pk, pk, pubkey->x0);
     gen_urandomm(rnd, rs_rnd, u_rnd);
-    mpz_mul(rnd, rnd, para->pt_limit);
+    mpz_mul(rnd, rnd, para->pt_limit.get_mpz_t());
     mpz_add(rnd, rnd, plaintext);
     mpz_add(ciphertext->c, rnd, pk);
 
@@ -133,6 +133,38 @@ void CNT_encrypt(__cit* ciphertext, mpz_t plaintext, __rc_pubkey_set* pubkey, __
     gmp_randclear(rs_rnd);
 }
 
-mpz_class CNT_decrypt(__cit* ciphertext, __rc_prikey* prikey, mpz_t pt_limit) {
-    return mpz_class(ciphertext->c) % mpz_class(prikey->sk) % mpz_class(pt_limit);
+void CNT_encrypt(__citpp* ciphertext, mpz_class plaintext, __rc_pubkey_set* pubkey, __sec_setting* para) {
+    gmp_randclass rs_rnd(gmp_randinit_default);
+    mpz_class pk = 0, pki, rnd, u_pks, u_rnd;
+
+    rs_rnd.seed(pubkey->seed * 2);
+
+    mpz_ui_pow_ui(u_pks.get_mpz_t(), BASE, pubkey->pk_bit_cnt);
+    mpz_ui_pow_ui(u_rnd.get_mpz_t(), BASE, para->Rho);
+
+    for (unsigned long i = 0; i < para->lam / 4; ++i) {
+        gmp_randclass rs_pks(gmp_randinit_default);
+
+        rs_pks.seed(pubkey->seed);
+        rnd = rs_rnd.get_z_range(u_rnd);
+
+        int index = (int) (rnd.get_ui() % para->tau);
+        for (int r = index; r >= 0; --r) {
+            pki = rs_pks.get_z_range(u_pks);
+        }
+
+        pki -= mpz_class(pubkey->delta[index]);
+        pk += pki;
+
+        // rs_pks.~gmp_randclass();
+    }
+
+    pk *= para->pt_limit;
+    pk %= mpz_class(pubkey->x0);
+    ciphertext->c = rs_rnd.get_z_range(u_rnd) * para->pt_limit + plaintext + pk;
+}
+
+
+mpz_class CNT_decrypt(__cit* ciphertext, __rc_prikey* prikey, mpz_class pt_limit) {
+    return mpz_class(ciphertext->c) % mpz_class(prikey->sk) % pt_limit;
 }

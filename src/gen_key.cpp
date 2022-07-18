@@ -98,19 +98,19 @@ void getQs(mpz_t* q, mpz_t p, size_t gam, size_t tau, size_t lam, randstate rs) 
 
 }
 
- void randomize_ss(mpz_t* ss, size_t ss_hw, size_t ss_size){
-     unsigned long  seed = get_seed();
-     srand(seed);
-     unsigned long i, r;
-     for(i=0; i < ss_hw; i++){
- 	     r= rand() % ss_size;
- 	     if(mpz_cmp_ui(ss[r], 0) == 0){
-             mpz_set_ui(ss[r], 1);
- 	     }else if(mpz_cmp_ui(ss[r], 1) == 0){
-             i=i-1;
- 	     }
- 	 }
- }
+void randomize_ss(mpz_t* ss, size_t ss_hw, size_t ss_size) {
+    unsigned long seed = get_seed();
+    srand(seed);
+    unsigned long i, r;
+    for (i = 0; i < ss_hw; ++i) {
+        r = rand() % ss_size;
+        if (mpz_cmp_ui(ss[r], 0) == 0) {
+            mpz_set_ui(ss[r], 1);
+        } else if (mpz_cmp_ui(ss[r], 1) == 0) {
+            --i;
+        }
+    }
+}
 
 void randomize_sk(mpz_t* yy, mpz_t p, size_t ss_hw, size_t prec) {
     unsigned long i;

@@ -20,13 +20,13 @@ void init_sec_para(__sec_setting** para)
         exit(1);
     }
 
-    mpz_init((*para)->pt_limit);
+    // mpz_init((*para)->pt_limit);
 }
 
 void clear_sec_para(__sec_setting** para)
 {
     if (*para != NULL) {
-        mpz_clear((*para)->pt_limit);
+        // mpz_clear((*para)->pt_limit);
         free(*para);
     }
 }
@@ -80,7 +80,7 @@ void set_default_para(__sec_setting* para, int level)
             break;
     }
     para->prec = para->gam + para->eta;
-    mpz_ui_pow_ui(para->pt_limit, 2, 512);  // SHA3-512 is 128 digits long in base 16. 512 = 8 * 128 / 2 (1 byte can have 2 digits)
+    mpz_ui_pow_ui(para->pt_limit.get_mpz_t(), 2, 512);  // SHA3-512 is 128 digits long in base 16. 512 = 8 * 128 / 2 (1 byte can have 2 digits)
 }
 
 bool para_valid(__sec_setting* para)
