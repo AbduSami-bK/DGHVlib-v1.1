@@ -60,6 +60,30 @@ void init_rc_pkset(__rc_pubkey_set** pubkey, __sec_setting* para)
     (*pubkey)->pk_bit_cnt = para->gam;
 }
 
+void init_rc_pkset(__rc_pubkey_setPP** pubkey, __sec_setting* para)
+{
+    unsigned long i;
+    *pubkey = (__rc_pubkey_setPP*) malloc(sizeof (__rc_pubkey_setPP));
+
+    (*pubkey)->delta = (mpz_class*) malloc(sizeof (mpz_class) * para->tau);
+
+    (*pubkey)->y = (mpf_class*) malloc(sizeof (mpf_class) * para->Theta);
+
+    (*pubkey)->sigma = (mpz_class**) malloc(sizeof (mpz_class*) *(para->eta - para->Rho + 1));
+    for (i = 0; i < para->eta - para->Rho + 1; i++) {
+        (*pubkey)->sigma[i] = (mpz_class*) malloc(sizeof (mpz_class) * para->Theta);
+        for (unsigned long j = 0; j < para->Theta; j++) {
+            (*pubkey)->sigma[i][j] = 0;
+        }
+    }
+
+    (*pubkey)->sx = para->eta - para->Rho + 1;
+    (*pubkey)->sy = para->Theta;
+    (*pubkey)->pks_size = para->tau;
+    (*pubkey)->y_size = para->Theta;
+    (*pubkey)->pk_bit_cnt = para->gam;
+}
+
 void clear_rc_sk(__rc_prikey* prikey)
 {
     mpz_clear(prikey->sk);
@@ -98,3 +122,20 @@ void clear_rc_pkset(__rc_pubkey_set* pubkey)
         free(pubkey->sigma);
     free(pubkey);
 }
+
+void clear_rc_pkset(__rc_pubkey_setPP* pubkey)
+{
+    unsigned long i;
+    free(pubkey->delta);
+
+    free(pubkey->y);
+
+    for (i = 0; i < pubkey->sx; i++) {
+        if (pubkey->sigma[i] != NULL)
+            free(pubkey->sigma[i]);
+    }
+    if (pubkey->sigma != NULL)
+        free(pubkey->sigma);
+    free(pubkey);
+}
+

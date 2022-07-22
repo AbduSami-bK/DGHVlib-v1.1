@@ -25,6 +25,15 @@ char* format_ciphertext_str(__cit* ciph) {
 	return buffer;
 }
 
+std::ostream& operator<<(std::ostream& out, __citpp* ciph) {
+	if (ciph == NULL) {
+		return out;
+	}
+	out << ciph->c;
+
+	return out;
+}
+
 std::string format_ciphertext_str(__citpp* ciph) {
 	if (ciph == NULL) {
 		return NULL;
@@ -613,7 +622,81 @@ int format_str_rc_publickey(std::vector<std::string> &buffer, __rc_pubkey_set* p
 	return 0;
 }
 
-/*__rc_pubkey_set format_str_rc_publickey(std::vector<std::string> &buffer) {
+/*int format_str_rc_publickey(std::vector<std::string> &buffer, __rc_pubkey_setPP* pubkey) {
+	if (buffer.empty() || pubkey == NULL) {
+		return -1;
+	}
+
+	// buffer index
+	unsigned long int index = 0;
+	std::istringstream iBuf(buffer[index++]);
+
+	// Static sized members
+	{
+		// sscanf(buffer[0].c_str(), "%lu %lu %lu %lu %lu %lu", &(pubkey->sx), &(pubkey->sy), &(pubkey->pks_size), &(pubkey->y_size), &(pubkey->pk_bit_cnt), &(pubkey->seed));
+		// pubkey->seed = stoul(buffer[0]);
+		iBuf
+			>> pubkey->sx
+			>> pubkey->sy
+			>> pubkey->pks_size
+			>> pubkey->y_size
+			>> pubkey->pk_bit_cnt
+			>> pubkey->seed;
+	}
+
+	// delta
+	iBuf.str(buffer[index++]);
+	for (unsigned long i = 1; i < pubkey->pks_size + 1; ++i) {
+		unsigned long val;
+		iBuf >> val;
+		pubkey->delta[i] = val;
+		//mpz_set(pubkey->delta[i - 1], mpz_class(buffer[i], 10).get_mpz_t());
+	}
+
+	// x0
+	//pubkey->x0 = buffer[i++];
+	// mpz_set(pubkey->x0, mpz_class(buffer[i++]).get_mpz_t());
+	pubkey->x0 = buffer[index++];
+	pubkey->rx0 = buffer[index++];
+
+	// y
+	for (unsigned long i = 0; i < pubkey->y_size; ++i) {
+		// __mpf_struct* tmp;
+		iBuf.str(buffer[index++]);
+
+		// tmp = (__mpf_struct*) malloc(sizeof(__mpf_struct));
+		// sscanf(buffer[i].c_str(), "%d %d %lu ", &(tmp->_mp_prec), &(tmp->_mp_size), &(tmp->_mp_exp));
+		iBuf >> MP_PREC(pubkey->y[i])
+			>> MP_SIZE(pubkey->y[i])
+			>> MP_EXP(pubkey->y[i]);
+		// tmp->_mp_d = (mp_limb_t*) malloc(tmp->_mp_size * sizeof(mp_limb_t));
+
+		// const char* buf = strchr(buffer[i].c_str(), '#');
+		iBuf.ignore(3, '#');	// Ignore atmost 3 chars, until you reach '#'.
+		for (int k = 0; k < MP_SIZE(pubkey->y[i]); ++k) {
+			// buf = strchr(buf, ' ') + 1;
+			// sscanf(buf, "%lx", &tmp->_mp_d[k]);
+			iBuf >> pubkey->y[i]->_mp_d[k];
+		}
+		// mpf_set(pubkey->y[j], tmp);
+		// mpf_clear(tmp);
+		// free(tmp);
+	}
+
+	// sigma
+	for (unsigned long t = 0; t < pubkey->sy; ++t) {
+		for (unsigned long j = 0; j < pubkey->sy; ++j) {
+			pubkey->sigma[t][j] = buffer[index];
+		}
+	}
+
+	// gen_time
+	pubkey->gen_time.assign(buffer[index]);
+	return 0;
+}
+
+
+__rc_pubkey_set format_str_rc_publickey(std::vector<std::string> &buffer) {
 	__rc_pubkey_set pubkey;
 
 	if (buffer.empty()) {

@@ -25,6 +25,13 @@ void init_cit(__cit** ciph, size_t Theta) {
     (*ciph)->z_size = Theta;
 }
 
+void init_citpp(__citpp** ciph, size_t Theta) {
+    *ciph = (__citpp*) malloc(sizeof (__citpp));
+    (*ciph)->z = (mpf_class*) malloc(Theta * sizeof (mpf_class));
+    (*ciph)->zt = (mpz_class*) malloc(Theta * sizeof (mpz_class));
+    (*ciph)->z_size = Theta;
+}
+
 void expend_cit(__cit* ciph, __pubkey_set* pubkey) {
     unsigned long i;
     mpf_t zz;
@@ -114,6 +121,18 @@ void clear_cit(__cit* ciph) {
         for (i = 0; i < ciph->z_size; i++) {
             mpz_clear(ciph->zt[i]);
         }
+        free(ciph->zt);
+    }
+
+    free(ciph);
+}
+
+void clear_citpp(__citpp* ciph) {
+    if (ciph->z != NULL) {
+        free(ciph->z);
+    }
+
+    if (ciph->zt != NULL) {
         free(ciph->zt);
     }
 

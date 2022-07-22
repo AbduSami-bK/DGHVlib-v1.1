@@ -134,7 +134,7 @@ void CNT_encrypt(__cit* ciphertext, mpz_t plaintext, __rc_pubkey_set* pubkey, __
 }
 
 void CNT_encrypt(__citpp* ciphertext, mpz_class plaintext, __rc_pubkey_set* pubkey, __sec_setting* para) {
-    gmp_randclass rs_rnd(gmp_randinit_default);
+    gmp_randclass rs_rnd(gmp_randinit_lc_2exp_size, 8);
     mpz_class pk = 0, pki, rnd, u_pks, u_rnd;
 
     rs_rnd.seed(pubkey->seed * 2);
@@ -160,8 +160,14 @@ void CNT_encrypt(__citpp* ciphertext, mpz_class plaintext, __rc_pubkey_set* pubk
     }
 
     pk *= para->pt_limit;
-    pk %= mpz_class(pubkey->x0);
+    pk %= mpz_class(pubkey->x0);    // FIXME Floating Point Exception
+    // mpz_t tpk;
+    // mpz_init(tpk);
+    // mpz_set(tpk, pk.get_mpz_t());
+    // mpz_mod(tpk, tpk, pubkey->x0);
     ciphertext->c = rs_rnd.get_z_range(u_rnd) * para->pt_limit + plaintext + pk;
+
+    // mpz_clear(tpk);
 }
 
 

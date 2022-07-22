@@ -178,7 +178,7 @@ typedef struct rc_publickey_setPP {
     size_t pks_size;
     size_t y_size;
     size_t pk_bit_cnt;
-    std::string gen_time[20];
+    std::string gen_time;
     unsigned long seed;
 } __rc_pubkey_setPP;
 
@@ -264,17 +264,19 @@ void clear_sc_sk(__sc_prikey* prikey);
 void clear_sc_pkset(__sc_pubkey_set* pubkey );
 
 
-/****************  Initialized Ramdom Compress Key.  ****************/
+/****************  Initialized Random Compress Key.  ****************/
 
 void init_rc_sk(__rc_prikey** prikey, __sec_setting* para);
 
 void init_rc_pkset(__rc_pubkey_set** pubkey, __sec_setting* para);
+void init_rc_pkset(__rc_pubkey_setPP ** pubkey, __sec_setting* para);
 
 void clear_rc_sk(__rc_prikey* prikey);
 
 void clear_rc_pkset(__rc_pubkey_set* pubkey);
+void clear_rc_pkset(__rc_pubkey_setPP* pubkey);
 
-/****************  Generated Ramdom Number.  ****************/
+/****************  Generated Random Number.  ****************/
 //gen_random.c
 
 //Get random seeds
@@ -371,6 +373,7 @@ void gen_pubkey(__pubkey_set* pubkey, __prikey* prikey, __sec_setting* para, ran
 
 //Initializing the redaction Theta is the Theta in the parameter
 void init_cit(__cit** ciph, size_t Theta);
+void init_citpp(__citpp** ciph, size_t Theta);
 
 //Extended redaction zi = cyi is stored in the redaction ciph->z,i, a collection of pubkey bit public keys
 void expend_cit(__cit* ciph, __pubkey_set* pubkey);
@@ -381,6 +384,7 @@ void expend_rc_cit(__cit* ciph, __rc_pubkey_set* pubkey, unsigned long rsk_bit_c
 
 //Release the redaction
 void clear_cit(__cit* ciph);
+void clear_citpp(__citpp* ciph);
 
 void swap_cit(__cit* ciph1, __cit* ciph2);
 
@@ -532,7 +536,7 @@ std::string base64_decode(std::istringstream &encoded);
 /****************  Format Ciphertext & Key Convert into String.  ****************/
 
 char* format_ciphertext_str(__cit* ciph);
-std::string format_ciphertext_text(__citpp* ciph);
+std::ostream& operator<<(std::ostream&, __citpp* ciph);
 
 int format_privatekey_str(__prikey* prikey, char **buffer, int *length);
 int format_rc_privatekey_str(__rc_prikey* prikey, char **buffer, int *length);
@@ -545,6 +549,7 @@ int write_rc_publickey(__rc_pubkey_set* pubkey, std::ostream &out);
 
 std::ostream& operator<<(std::ostream&, __rc_prikey);
 std::ostream& operator<<(std::ostream&, __rc_pubkey_set);
+std::ostream& operator<<(std::ostream&, __rc_pubkey_setPP);
 
 /****************  Format String Convert into Ciphertext & Key.  ****************/
 
@@ -556,11 +561,14 @@ int format_str_rc_privatekey(std::vector<std::string>& buffer, __rc_prikey* prik
 
 int format_str_publickey(char **buffer, int length, __pubkey_set *pubkey);
 int format_str_rc_publickey(std::vector<std::string> &buffer, __rc_pubkey_set* pubkey);
+// int format_str_rc_publickey(std::vector<std::string> &buffer, __rc_pubkey_setPP* pubkey);
 // __rc_pubkey_set format_str_rc_publickey(std::vector<std::string> &buffer);
 int read_rc_publickey(__rc_pubkey_set* pubkey, std::istream &in);
+int read_rc_publickey(__rc_pubkey_setPP* pubkey, std::istream &in);
 
 std::istream& operator>>(std::istream&, __rc_prikey);
 std::istream& operator>>(std::istream&, __rc_pubkey_set);
+std::istream& operator>>(std::istream&, __rc_pubkey_setPP);
 
 /****************  Read & Write Key.  ****************/
 
